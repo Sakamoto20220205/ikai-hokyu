@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>異界補給戦記 ― 補給事務トレーニング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Shippori+Mincho+B1:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+ --brass:#c9a04f;--brass-l:#f0d58d;--brass-d:#7a5a22;
+ --parch:#e4cf9d;--ink:#2e1f10;--ink-blue:#1c2c55;
+ --wax:#8f1d1d;--wax-l:#c8402f;
+ --text:#efe6cf;--muted:#b9ae94;--good:#8fd99a;--bad:#ff8d7d;
+ --win-a:rgba(30,38,86,.93);--win-b:rgba(9,12,34,.95);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:#05060f;color:var(--text);font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-size:16px;line-height:1.75;font-weight:500}
+#scene{position:fixed;inset:0;z-index:0;transition:opacity .6s}
+#scene svg{width:100%;height:100%;display:block}
+#fx{position:fixed;inset:0;z-index:1;pointer-events:none}
+#app{position:relative;z-index:2;max-width:1360px;margin:0 auto;padding:18px 16px 40px}
+.screen{display:none}.screen.active{display:block;animation:fadein .5s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+h1,h2,h3{margin:0 0 8px;line-height:1.35;font-weight:800}
+h3{font-size:18px}
+.muted{color:var(--muted)}
+.grow{flex:1}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brass-l);outline-offset:2px}
+
+/* 真鍮枠のウィンドウ */
+.win{position:relative;background:linear-gradient(180deg,var(--win-a),var(--win-b));border:2px solid var(--brass);border-radius:10px;padding:16px 18px;
+ box-shadow:inset 0 0 0 2px #070918,inset 0 0 0 3px rgba(240,213,141,.3),0 14px 34px rgba(0,0,0,.55)}
+.win::before,.win::after{content:"";position:absolute;top:-7px;width:11px;height:11px;background:linear-gradient(135deg,var(--brass-l),var(--brass-d));transform:rotate(45deg);box-shadow:0 0 0 2px #070918}
+.win::before{left:-7px}.win::after{right:-7px}
+
+/* 羊皮紙 */
+.parch{position:relative;isolation:isolate;color:var(--ink);padding:22px 24px}
+.parch::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:3px;filter:url(#rough);
+ background:
+  radial-gradient(ellipse at 28% 18%,rgba(255,249,228,.6),transparent 58%),
+  radial-gradient(ellipse at 85% 92%,rgba(122,72,20,.28),transparent 55%),
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .38  0 0 0 0 .24  0 0 0 0 .09  0 0 0 .32 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+  var(--parch);
+ box-shadow:inset 0 0 55px rgba(112,64,18,.6),0 16px 30px rgba(0,0,0,.55)}
+.parch h3{font-size:20px;border-bottom:1.5px solid rgba(46,31,16,.55);padding-bottom:4px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.parch h3 small{font-size:13px;font-weight:500}
+.pinned{transform:rotate(-1.2deg)}
+.pinned::after{content:"";position:absolute;top:-8px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8a7a,#8f1d1d 65%,#3e0808);box-shadow:0 3px 4px rgba(0,0,0,.5)}
+.tome{background:linear-gradient(90deg,#1a0d05 0,#3e2313 14px,#4f2d18 60%,#331c0e);border-radius:6px 14px 14px 6px;padding:12px 12px 12px 18px;box-shadow:0 16px 30px rgba(0,0,0,.6),inset 0 0 0 2px #2a160a,inset 0 0 0 3px rgba(201,160,79,.45)}
+.tome .parch::before{border-radius:2px}
+
+table{border-collapse:collapse;width:100%}
+.ptab th,.ptab td{border-bottom:1px solid rgba(46,31,16,.3);padding:5px 6px;font-size:14px;text-align:left;vertical-align:middle}
+.ptab th{font-size:12px;font-weight:700;color:#5a4026;border-bottom:1.5px solid rgba(46,31,16,.55);white-space:nowrap}
+.kv td{padding:2px 0;font-size:14px}.kv td:first-child{color:#5a4026;width:84px;font-size:13px}
+.parch input,.parch select{font-family:"Klee One",cursive;font-size:17px;font-weight:600;color:var(--ink-blue);background:transparent;border:0;border-bottom:1.5px dotted rgba(46,31,16,.6);border-radius:0;padding:2px 4px;width:100%;-webkit-appearance:none;appearance:none}
+.parch select{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0h10L5 6z' fill='%235a4026'/></svg>") no-repeat right 3px center;padding-right:14px}
+.parch input::placeholder{color:rgba(46,31,16,.3);font-family:"Shippori Mincho B1",serif;font-size:13px}
+.parch input:focus,.parch select:focus{outline:none;background-color:rgba(255,244,205,.65);border-bottom-style:solid}
+.parch input[type=number]{-moz-appearance:textfield}
+.parch input::-webkit-inner-spin-button{-webkit-appearance:none}
+.form td.name{font-size:13px;min-width:104px;color:#4a3420}
+.form td.name.ng{color:#a11d1d;font-weight:700}
+.form tr.active td{background:rgba(255,236,170,.45)}
+.hdrf{display:grid;grid-template-columns:1fr 1.5fr;gap:14px;margin:4px 0 10px}
+.hdrf label{font-size:12px;font-weight:700;color:#5a4026}
+.note{font-size:12.5px;line-height:1.7;margin-top:10px;color:#4a3420;border-top:1px dashed rgba(46,31,16,.4);padding-top:8px}
+.memo{font-size:14px;margin-top:12px;font-style:normal;color:#4a3420;border-left:3px solid #7a4a1a;padding:2px 10px}
+.x{background:none;border:0;color:#7a5a3a;font-size:16px;padding:0 4px}
+.x:hover{color:#a11d1d}
+.cat tbody tr{cursor:pointer}
+.cat tbody tr:hover td{background:rgba(255,236,170,.5)}
+.cat td.no{font-family:"Klee One",cursive;font-size:13px;white-space:nowrap}
+.cat td.stk{text-align:right;white-space:nowrap;font-size:13px}
+.cat td.stk.zero{color:#a11d1d;font-weight:700}
+.cat small{color:#7a5a3a}
+.guide{box-shadow:0 0 0 2px #d1201a,0 0 14px 3px rgba(220,30,30,.65)!important;border-radius:3px;animation:gpulse 1.2s ease-in-out infinite}
+tr.guide-row td{background:rgba(214,40,30,.2)!important}
+@keyframes gpulse{50%{box-shadow:0 0 0 2px #ff6a5a,0 0 22px 6px rgba(255,60,40,.55)}}
+
+/* ボタン */
+.btn{font-family:inherit;font-weight:800;font-size:16px;letter-spacing:.06em;color:#2a1a06;border:1px solid #5a3e12;border-radius:6px;padding:10px 22px;
+ background:linear-gradient(180deg,#f7de98 0%,#d6ab52 46%,#9c7128 100%);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 0 rgba(0,0,0,.22),0 3px 0 #4a3210,0 8px 16px rgba(0,0,0,.45);text-shadow:0 1px 0 rgba(255,240,200,.6);transition:transform .08s,filter .15s}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 0 #4a3210}
+.btn:disabled{filter:grayscale(.8) brightness(.6);cursor:not-allowed;transform:none}
+.btn.dark{background:linear-gradient(180deg,#3d2c1f,#1d130b);color:var(--text);border-color:var(--brass-d);text-shadow:none;box-shadow:inset 0 1px 0 rgba(240,213,141,.25),0 3px 0 #0d0905,0 8px 16px rgba(0,0,0,.45)}
+.btn.wax{background:radial-gradient(circle at 35% 28%,#e05a46,#8f1d1d 58%,#560c0c);color:#fde9d6;border-color:#3e0808;text-shadow:0 1px 0 #2a0404;box-shadow:inset 0 1px 0 rgba(255,200,180,.4),0 3px 0 #2a0404,0 8px 18px rgba(0,0,0,.5)}
+.btn.sm{font-size:13px;padding:5px 12px}
+
+/* タイトル */
+.hero{text-align:center;padding:5vh 10px 10px}
+.logo{font-size:clamp(46px,8vw,92px);font-weight:800;letter-spacing:.14em;margin:0;line-height:1.1;
+ background:linear-gradient(180deg,#fff4cc 0%,#f0d58d 38%,#b9862f 62%,#f6dd9a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 3px 0 #3a2508) drop-shadow(0 0 24px rgba(120,160,255,.35))}
+.logo-sub{font-size:18px;letter-spacing:.4em;color:#d9cdb0;margin-top:6px}
+.story{max-width:640px;margin:18px auto 26px;text-align:center;color:#ddd3b8;font-size:15px;text-shadow:0 2px 6px #000}
+.selwrap{max-width:1080px;margin:0 auto}
+.selwrap h3{font-size:16px;color:var(--brass-l);margin:14px 0 8px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.opt{position:relative;text-align:left;color:var(--text);background:rgba(8,10,30,.55);border:1px solid rgba(201,160,79,.4);border-radius:8px;padding:10px 14px 12px;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--brass-l)}
+.opt.sel{border-color:var(--brass-l);background:rgba(76,56,16,.55);box-shadow:0 0 0 1px var(--brass-l),0 0 20px rgba(240,213,141,.3)}
+.opt.sel b::before{content:"◆ ";color:var(--brass-l)}
+.opt:disabled{opacity:.45;cursor:not-allowed}
+.opt b{font-size:17px}
+.opt .d{font-size:13px;color:#cfc5ab;line-height:1.6;margin-top:2px}
+.opt ul{margin:4px 0 0;padding-left:18px;font-size:13px;color:#cfc5ab;line-height:1.6}
+.opt .soon{position:absolute;top:9px;right:10px;font-size:11px;color:var(--muted);border:1px solid rgba(201,160,79,.4);border-radius:99px;padding:0 8px}
+.startbar{text-align:center;margin:24px 0 8px}
+.startbar .btn{font-size:20px;padding:13px 54px}
+.best{text-align:center;font-size:13px;color:var(--muted)}
+details.howto{max-width:1080px;margin:18px auto 0}
+details.howto summary{cursor:pointer;font-weight:800;color:var(--brass-l)}
+details.howto ol{margin:8px 0 0;padding-left:22px;font-size:14px}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:24px;text-shadow:0 1px 3px #000}
+
+/* 上部バー */
+.topbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 16px;margin-bottom:14px}
+.chip{font-size:13px;color:var(--brass-l);border:1px solid rgba(201,160,79,.5);border-radius:99px;padding:1px 12px;white-space:nowrap}
+.hg{display:flex;align-items:center;gap:8px}
+.hg svg{width:28px;height:42px}
+.hg .sand-top,.hg .sand-bot{transform-box:fill-box;transform-origin:50% 100%;transition:transform 1s linear}
+.hg b{font-size:22px;font-variant-numeric:tabular-nums;min-width:58px}
+.hg.low b{color:var(--bad);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.45}}
+
+/* 伝令（ブリーフィング） */
+.brief{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;align-items:center;min-height:70vh}
+.scroll{position:relative;padding:18px 0}
+.scroll::before,.scroll::after{content:"";position:absolute;left:-14px;right:-14px;height:26px;border-radius:13px;z-index:3;
+ background:linear-gradient(180deg,#6b4423,#3a220f 50%,#24140a);box-shadow:0 6px 12px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,220,160,.25)}
+.scroll::before{top:0}.scroll::after{bottom:0}
+.scroll .parch{animation:unroll 1s cubic-bezier(.2,.8,.2,1) both;padding:30px 30px 26px}
+@keyframes unroll{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.monster{display:grid;place-items:center;position:relative}
+.monster svg{width:min(420px,80%);height:auto;filter:drop-shadow(0 0 28px var(--glow,rgba(160,200,255,.4)));animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.traits{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.traits span{font-size:12.5px;border:1px solid rgba(46,31,16,.45);border-radius:4px;padding:0 8px;color:#4a3420;background:rgba(255,240,200,.35)}
+.win .traits span{color:#e9dcc0;border-color:rgba(201,160,79,.45);background:rgba(0,0,0,.25)}
+
+/* 書類机 */
+.docgrid{display:grid;grid-template-columns:minmax(250px,.95fr) minmax(480px,1.75fr) minmax(300px,1.15fr);gap:18px;align-items:start}
+@media(max-width:1150px){.docgrid{grid-template-columns:1fr}.brief{grid-template-columns:1fr}}
+.omen{display:flex;gap:12px;align-items:center;margin-bottom:14px;padding:10px 16px;border-color:#d1201a}
+.omen .em{flex:none;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8070,#a11d1d 60%,#4a0606);display:grid;place-items:center;color:#fff;font-weight:800;box-shadow:0 0 14px rgba(255,60,40,.6)}
+.omen.ok{border-color:#5aa865}.omen.ok .em{background:radial-gradient(circle at 35% 30%,#a8f0b0,#2f7a3a 60%,#0e3314);box-shadow:0 0 14px rgba(90,200,110,.6)}
+
+/* 署名演出 */
+#sign{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(4,5,14,.72);backdrop-filter:blur(3px)}
+#sign.on{display:grid}
+.sign-paper{width:min(560px,92vw);transform-origin:50% 50%}
+.sign-paper.thud{animation:thud .28s}
+@keyframes thud{40%{transform:scale(.985) translateY(3px)}}
+.sign-paper.fly{animation:fly .95s cubic-bezier(.5,0,.75,0) forwards}
+@keyframes fly{0%{transform:none;opacity:1}35%{transform:scaleY(.1) scaleX(.86);opacity:1}100%{transform:translate(55vw,-75vh) scaleY(.1) scaleX(.3) rotate(-28deg);opacity:0}}
+.sigline{display:flex;align-items:flex-end;gap:12px;margin-top:16px}
+.sigline span{font-size:13px;color:#5a4026;white-space:nowrap}
+.sigbox{position:relative;width:260px;height:70px;border-bottom:1.5px solid rgba(46,31,16,.6)}
+.sigbox svg.sig{position:absolute;inset:0;width:260px;height:70px;overflow:visible}
+.sigpath{fill:none;stroke:var(--ink-blue);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.quill{position:absolute;top:0;left:0;width:60px;height:120px;offset-rotate:0deg;offset-anchor:8px 116px;opacity:0;transition:transform .5s ease-in,opacity .5s}
+.quill.go{opacity:1}
+.quill.lift{transform:translate(40px,-70px) rotate(12deg);opacity:0}
+.waxseal{position:absolute;right:26px;bottom:20px;width:104px;height:104px;opacity:0}
+.waxseal.on{animation:stamp .5s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes stamp{from{opacity:0;transform:scale(2.6) rotate(-24deg)}to{opacity:1;transform:scale(1) rotate(-9deg)}}
+.sign-cap{position:absolute;bottom:8vh;left:0;right:0;text-align:center;color:var(--brass-l);font-size:15px;text-shadow:0 2px 6px #000}
+.sign-skip{position:absolute;bottom:3vh;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
+.sumtab td{font-family:"Klee One",cursive;color:var(--ink-blue);font-size:15px;padding:1px 4px}
+.sumtab td:first-child{font-family:"Shippori Mincho B1",serif;color:#5a4026;font-size:12px;width:20px}
+
+/* 交付所 */
+.prepgrid{display:grid;grid-template-columns:1fr 1.1fr;gap:18px;align-items:start}
+@media(max-width:1000px){.prepgrid{grid-template-columns:1fr}}
+.dl{list-style:none;margin:0;padding:0}
+.dl li{display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(46,31,16,.25);font-size:14px}
+.stamp{display:inline-block;text-align:center;border:2px solid currentColor;border-radius:4px;padding:0 4px;font-weight:800;font-size:13px;transform:rotate(-7deg);letter-spacing:.1em;opacity:.85}
+.stamp.ok{color:#2c6a32}.stamp.ng{color:#a11d1d}.stamp.w{color:#8a5a00}
+.banner{padding:10px 16px;margin-bottom:12px;font-weight:700}
+.banner.red{border-color:#d1201a}.banner.yel{border-color:#e0b040}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 10px}
+.stats div{background:rgba(0,0,0,.28);border:1px solid rgba(201,160,79,.3);border-radius:6px;text-align:center;font-size:12px;color:var(--muted);padding:4px}
+.stats b{display:block;font-size:20px;color:var(--text)}
+.equips{display:flex;flex-wrap:wrap;gap:6px}
+.equips span{font-size:12.5px;border:1px solid rgba(201,160,79,.3);border-radius:4px;padding:0 8px;color:var(--muted)}
+.equips span.on{border-color:var(--good);color:var(--good)}
+.slots{display:grid;gap:6px;margin-top:8px}
+.slot{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;background:rgba(0,0,0,.25);border:1px solid rgba(201,160,79,.28);border-radius:8px;padding:6px 10px}
+.ic{width:42px;height:42px;border-radius:7px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#2c3670,#0f1436);border:1px solid var(--brass-d);box-shadow:inset 0 0 8px rgba(0,0,0,.6)}
+.ic svg{width:30px;height:30px}
+.slot .nm{font-size:14px;line-height:1.4}.slot .nm small{display:block;color:var(--muted);font-size:12px}
+.slot .ac{text-align:right;font-size:12.5px}
+.st-ok{color:var(--good)}.st-ng{color:var(--bad)}
+
+/* 戦闘 */
+.field{position:relative;height:min(48vh,440px);display:grid;place-items:end center;margin-bottom:12px}
+.field .monster svg{height:min(44vh,400px);width:auto}
+.nameplate{position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(420px,90%);text-align:center;padding:8px 14px}
+.nameplate h2{font-size:22px;margin:0}
+.hpbar{height:12px;background:#05060f;border:1px solid var(--brass-d);border-radius:2px;overflow:hidden;margin-top:4px}
+.hpbar i{display:block;height:100%;background:linear-gradient(180deg,#ff8a78,#b3261e);transition:width .35s}
+.hpbar.us i{background:linear-gradient(180deg,#a8f0b0,#2f8a3e)}
+.dmg{position:absolute;font-size:38px;font-weight:800;color:#fff7e0;-webkit-text-stroke:1.5px #6b0d0d;text-shadow:0 3px 0 #2a0404;pointer-events:none;animation:dmgup 1s ease-out forwards;z-index:5}
+.dmg.heal{color:#c9ffd0;-webkit-text-stroke-color:#0e4a1a}
+.dmg.us{font-size:28px}
+@keyframes dmgup{0%{transform:translateY(10px) scale(.6);opacity:0}20%{transform:translateY(-6px) scale(1.15);opacity:1}100%{transform:translateY(-60px) scale(1);opacity:0}}
+.boom{position:absolute;width:220px;height:220px;border-radius:50%;pointer-events:none;z-index:4;background:radial-gradient(circle,rgba(255,250,220,.95),rgba(255,170,60,.7) 30%,rgba(200,40,20,.3) 55%,transparent 70%);animation:boom .5s ease-out forwards}
+.boom.small{width:110px;height:110px}
+@keyframes boom{from{transform:scale(.2);opacity:1}to{transform:scale(1.3);opacity:0}}
+.hurt{animation:hurt .4s}
+@keyframes hurt{20%{transform:translateX(-10px);filter:brightness(2)}45%{transform:translateX(9px)}70%{transform:translateX(-5px)}}
+.flashred{animation:flashred .4s}
+@keyframes flashred{30%{box-shadow:inset 0 0 0 2px #070918,0 0 0 3px #d1201a,0 0 30px rgba(220,30,30,.7)}}
+.bgrid{display:grid;grid-template-columns:minmax(260px,.9fr) 1.4fr;gap:14px}
+@media(max-width:900px){.bgrid{grid-template-columns:1fr}}
+.cmd{display:flex;justify-content:space-between;align-items:baseline;width:100%;background:none;border:0;color:var(--text);padding:7px 10px 7px 26px;border-radius:6px;text-align:left;font-size:17px;font-weight:700;position:relative}
+.cmd small{font-size:12px;color:var(--muted);font-weight:500}
+.cmd:hover:not(:disabled),.cmd:focus-visible{background:rgba(240,213,141,.12)}
+.cmd:hover:not(:disabled)::before,.cmd:focus-visible::before{content:"▶";position:absolute;left:8px;color:var(--brass-l);font-size:12px;top:11px}
+.cmd:disabled{color:#5f6380;cursor:not-allowed}
+.cmd:disabled small{color:#4d5070}
+.ammo{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.ammo div{background:rgba(0,0,0,.28);border:1px solid rgba(201,160,79,.25);border-radius:6px;padding:3px 8px;font-size:12px;color:var(--muted)}
+.ammo b{font-size:18px;color:var(--text);font-variant-numeric:tabular-nums}
+.ammo div.low b{color:var(--bad)}
+.log{max-height:150px;overflow:auto;font-size:14px;margin-top:14px}
+.log div{padding:1px 0}
+.log .p{color:#a9d6ff}.log .e{color:#ffaaa0}.log .s{color:var(--brass-l)}.log .h{color:#a8f0b0}
+.result{text-align:center;margin-top:10px}
+.result h2{font-size:34px;letter-spacing:.2em}
+
+/* 査閲報告 */
+.report{max-width:1100px;margin:0 auto}
+.scoreline{display:grid;grid-template-columns:repeat(3,1fr) 140px;gap:12px;align-items:center;margin:10px 0 16px}
+.scoreline div{text-align:center;border:1px solid rgba(46,31,16,.35);border-radius:4px;padding:6px;font-size:13px;color:#5a4026;background:rgba(255,244,210,.35)}
+.scoreline b{display:block;font-size:28px;color:var(--ink)}
+.scoreline .sealbox{border:0;background:none;padding:0}
+.rt th,.rt td{border-bottom:1px solid rgba(46,31,16,.28);padding:7px 6px;font-size:14px;text-align:left;vertical-align:top}
+.rt th{font-size:12px;color:#5a4026;font-weight:700;border-bottom:1.5px solid rgba(46,31,16,.55)}
+.ck{display:inline-block;font-family:"Klee One",cursive;font-weight:600;font-size:13.5px;padding:0 6px;margin:1px 2px;border-radius:3px}
+.ck.o{color:#1f5a26;background:rgba(80,160,90,.16)}.ck.n{color:#a11d1d;background:rgba(200,40,30,.14);text-decoration:line-through;text-decoration-color:rgba(161,29,29,.6)}
+.eff{margin:0;padding-left:16px}
+.tips{margin-top:14px;padding:10px 16px;border-left:4px solid #7a4a1a;background:rgba(255,244,210,.4)}
+.tips ul{margin:4px 0 0;padding-left:18px}
+.foot-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* タイトル */
+.title-wrap{min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:6vh}
+.title-wrap .logo{font-size:clamp(54px,10vw,120px);animation:logoin 1.6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes logoin{from{opacity:0;letter-spacing:.5em;filter:blur(8px)}to{opacity:1}}
+.menu{display:flex;flex-direction:column;gap:12px;margin:7vh 0 2vh;align-items:center}
+.menu .btn{min-width:240px;font-size:19px}
+.title-howto{max-width:760px;text-align:left;display:none;margin:0 auto 14px;font-size:14px}
+.title-howto.on{display:block}
+.title-howto ol{margin:0;padding-left:22px}
+/* プロローグ */
+#s-prologue{position:fixed;inset:0;z-index:20;background:radial-gradient(ellipse at center,rgba(5,6,15,.5),rgba(5,6,15,.93));place-items:center;cursor:pointer}
+#s-prologue.active{display:grid}
+.mono{max-width:760px;padding:0 24px;font-size:clamp(18px,2.4vw,25px);line-height:2.1;text-align:center;color:#efe6cf;text-shadow:0 2px 10px #000}
+.mono p{margin:0 0 .5em;opacity:0;transform:translateY(8px);transition:opacity 1.2s,transform 1.2s}
+.mono p.on{opacity:1;transform:none}
+.skip{position:fixed;top:18px;right:20px;z-index:21}
+.hint{position:fixed;bottom:5vh;left:0;right:0;text-align:center;color:var(--muted);font-size:13px}
+/* ノベル形式 */
+.vn{position:relative;height:calc(100vh - 110px);min-height:580px}
+.vn-stage{position:absolute;left:0;right:0;top:0;bottom:120px;pointer-events:none}
+.actor{position:absolute;bottom:0;transition:filter .35s,transform .35s}
+.actor svg{height:min(66vh,560px);width:auto;display:block;filter:drop-shadow(0 12px 22px rgba(0,0,0,.65))}
+.actor.l{left:1%}.actor.c{left:22%}.actor.r{right:3%}
+.actor.dim{filter:brightness(.5) saturate(.7)}
+.actor.speak{transform:translateY(-6px)}
+.actor.mon{bottom:70px}
+.actor.mon svg{height:min(50vh,430px);filter:drop-shadow(0 0 30px var(--glow));animation:bob 3.2s ease-in-out infinite}
+.vn-panel{position:absolute;right:0;top:0;width:min(580px,50%);max-height:calc(100% - 175px);overflow:auto;pointer-events:auto;padding:8px 6px 6px}
+.dlg{position:absolute;left:0;right:0;bottom:0;min-height:136px;cursor:pointer;padding:14px 24px 18px}
+.dlg .who{display:inline-block;font-weight:800;color:var(--brass-l);font-size:15px;margin-bottom:6px;border-bottom:1px solid rgba(201,160,79,.55);padding:0 4px}
+.dlg .txt{font-size:clamp(16px,1.6vw,19px);line-height:1.85;min-height:3.6em}
+.dlg .txt.mono-line{font-style:normal;color:#e6dcc0}
+.dlg .nx{position:absolute;right:20px;bottom:10px;color:var(--brass-l);animation:nx 1s infinite}
+@keyframes nx{50%{transform:translateY(4px)}}
+.choices{position:absolute;left:50%;transform:translateX(-50%);bottom:156px;display:flex;flex-direction:column;gap:10px;width:min(480px,92vw);z-index:6}
+.choices .btn{font-size:17px}
+.relay-list li{opacity:0;animation:pin .45s ease forwards}
+@media(max-width:900px){.vn{height:auto;min-height:0}.vn-stage{position:relative;height:44vh;bottom:auto}.actor svg{height:42vh}.actor.c{left:38%}.actor.mon svg{height:34vh}.vn-panel{position:relative;width:100%;max-height:none}.dlg{position:relative;margin-top:12px}.choices{position:relative;left:0;transform:none;bottom:auto;margin:12px auto}}
+/* 書類の行方 */
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.lane>h3{text-align:center;color:var(--brass-l);font-size:20px;text-shadow:0 2px 6px #000;border-bottom:1px solid rgba(201,160,79,.5);padding-bottom:6px}
+.lane .cards{display:flex;flex-direction:column;gap:12px}
+.pcard{opacity:0;animation:pin .5s ease forwards;padding:12px 70px 12px 16px!important}
+@keyframes pin{from{opacity:0;transform:translateY(-14px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+.pcard b{display:block;font-size:15.5px}
+.pcard p{margin:2px 0 0;font-size:13px;line-height:1.6}
+.pcard .stamp{position:absolute;right:10px;top:12px}
+.trail-sum{margin-top:18px;opacity:0;animation:pin .5s ease forwards}
+.trail-sum ul{margin:6px 0 0;padding-left:20px}
+@media(max-width:900px){.lanes{grid-template-columns:1fr}}
+.portrait{float:left;width:72px;height:72px;margin:0 12px 0 0;border:1px solid var(--brass-d);border-radius:8px;background:radial-gradient(circle at 50% 40%,#2c3670,#0f1436);overflow:hidden}
+.portrait svg{width:100%;height:100%}
+
+.outc td{font-size:15px}.ppl{white-space:nowrap;font-size:13px;letter-spacing:-2px}.ppl .ok{color:#3a9a4a}.ppl .ng{color:#c0392b}
+.pp{display:inline-block;opacity:0;animation:pin .3s ease forwards}
+.win .ptab th{color:var(--brass-l);border-bottom-color:rgba(201,160,79,.5)}.win .ptab td{border-bottom-color:rgba(201,160,79,.2);color:var(--text)}
+.win .parch .ptab th{color:#5a4026;border-bottom-color:rgba(46,31,16,.55)}.win .parch .ptab td{color:var(--ink);border-bottom-color:rgba(46,31,16,.3)}
+.win .ptab select,.parch .ptab select{font-size:14px}
+.vn-panel .parch select{color:var(--ink-blue)}
+.parch .st-ng{color:#a11d1d}.parch .st-ok{color:#2c6a32}
+#audioCtl{position:fixed;left:10px;bottom:10px;z-index:60;display:flex;gap:6px}
+#audioCtl button{font-family:inherit;font-size:12px;font-weight:700;background:rgba(10,13,36,.88);color:var(--brass-l);border:1px solid var(--brass);border-radius:99px;padding:3px 12px;cursor:pointer}
+#audioCtl button.off{opacity:.5;text-decoration:line-through}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="11" xChannelSelector="R" yChannelSelector="G"/></filter>
+</svg>
+<div id="scene"></div>
+<canvas id="fx"></canvas>
+<div id="app">
+<section id="s-title" class="screen active"></section>
+<section id="s-setup" class="screen"></section>
+<section id="s-prologue" class="screen"></section>
+<section id="s-brief" class="screen"></section>
+<section id="s-vn" class="screen"></section>
+<section id="s-doc" class="screen"></section>
+<section id="s-trail" class="screen"></section>
+<section id="s-battle" class="screen"></section>
+<section id="s-debrief" class="screen"></section>
+<section id="s-end" class="screen"></section>
+</div>
+<div id="sign"></div>
+<div id="audioCtl"><button id="aBgm" type="button"></button><button id="aSe" type="button"></button></div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function norm(s){return String(s||'').replace(/[Ａ-Ｚａ-ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[－―‐ー−]/g,'-').replace(/\s/g,'').toUpperCase()}
+let SPEED=650;
+let UID=0;
+
+/* ============ 物品キー（異世界シナリオ） ============ */
+const RIFLE='1005-AS-0001',RR='1015-AS-0021',RIFLE_AMMO='1305-AS-0101',OLD_AMMO='1305-AS-0102',RR_AMMO='1315-AS-0301',GREN='1330-AS-0201',MED='6505-AS-2001',BAND='6505-AS-2002',HOLY='6850-AS-4001',OIL='6850-AS-4002',POTION='6850-AS-4101',MANTLE='8415-AS-5001',VEST='8470-AS-1001',RATION='8970-AS-3001';
+
+/* ============ シナリオ定義 ============ */
+const SCENARIOS={
+ fantasy:{
+  key:'fantasy',kind:'battle',label:'派遣補給隊（異世界）',desc:'異界の前線へ物資を送り、魔物と戦う基本シナリオ。全5章',
+  terms:{req:'補給請求書',doc:'払出票',depot:'補給所',counter:'補給所カウンター',relay:'中継地点',front:'前線',catTitle:'補給目録',catShort:'目録',runner:'伝令兵',relayP:'中継係 ハンス',recv:'受付係 ミレイ',carrier:'派遣第1小隊 レオン',signer:'レオン',report:'査閲報告',brief:'伝令書',briefTab:'伝令',courier:'伝令鳥',outcome:'戦闘',reqFrom:'派遣第1小隊',stockWord:'在庫',frontMe:'わたし（小隊の補給担当）',depotMe:'わたし（補給係）',relayMe:'わたし（中継係）',receiptBy:'受領者 レオン',reqSigner:'請求者 派遣第1小隊',endOk:['任務完了','魔王は倒れ、前線は補給線に支えられて勝利した'],endNg:['任務失敗','補給線は途絶え、前線は後退した…']},
+  units:['—','発','個','丁','門','着','組','食','本','巻','箱'],sizes:['—','S','M','L'],
+  squadName:'派遣第1小隊',squadSize:{[VEST]:'M',[MANTLE]:'L'},
+  destinations:['北門前進拠点','東の森陣地','南の湿地陣地','古戦場の野営地','竜の峡谷前哨','魔王城前進拠点'],
+  catalog:[
+   {no:RIFLE,name:'小銃（A型）',unit:'丁',kind:'weapon',note:'小銃弾5.56mmを使用'},
+   {no:RR,name:'無反動砲',unit:'門',kind:'weapon',note:'大型の敵に有効。無反動砲弾を使用'},
+   {no:RIFLE_AMMO,name:'小銃弾 5.56mm',unit:'発',kind:'ammo',note:'小銃（A型）用。射撃1回で10発'},
+   {no:OLD_AMMO,name:'小銃弾 7.62mm',unit:'発',kind:'ammo',note:'旧式小銃用',trap:'小銃（A型）では撃てない',like:RIFLE_AMMO},
+   {no:RR_AMMO,name:'無反動砲弾',unit:'発',kind:'ammo',note:'無反動砲用'},
+   {no:GREN,name:'手榴弾',unit:'個',kind:'battle',note:'戦闘中に投てき'},
+   {no:MED,name:'救急品セット',unit:'組',kind:'battle',note:'戦闘中にHP45回復'},
+   {no:BAND,name:'包帯',unit:'巻',kind:'battle',note:'戦闘中にHP12回復',trap:'救急品セットより回復量がずっと少ない',like:MED},
+   {no:HOLY,name:'聖水',unit:'本',kind:'prep',note:'戦闘前に使用。霊体・闇の加護を打ち消す'},
+   {no:OIL,name:'聖油（儀式用）',unit:'本',kind:'none',note:'儀式用',trap:'戦闘では効果がない',like:HOLY},
+   {no:POTION,name:'力の霊薬',unit:'本',kind:'prep',note:'戦闘前に使用。攻撃力+20%'},
+   {no:MANTLE,name:'耐火マント',unit:'着',sized:true,kind:'armor',note:'炎のダメージ半減'},
+   {no:VEST,name:'防弾チョッキ',unit:'着',sized:true,kind:'armor',note:'防御+6'},
+   {no:RATION,name:'戦闘糧食',unit:'食',kind:'prep',note:'戦闘前に使用。最大HP+15'},
+  ],
+  enemies:{
+   slime:{name:'スライム',hp:60,atk:10,traits:[]},orc:{name:'オーク',hp:150,atk:20,traits:[]},
+   reaper:{name:'死神',hp:170,atk:24,traits:['undead']},dragon:{name:'ドラゴン',hp:300,atk:26,traits:['scales','breath']},
+   maou:{name:'魔王',hp:480,atk:28,traits:['dark','wave']},
+  },
+  traitText:{undead:'霊体：聖水なしでは攻撃がほぼ効かない',scales:'硬い鱗：小銃・格闘の効果が低い',breath:'3ターンごとに炎のブレス（防御無視）',dark:'闇の加護：聖水なしでは与ダメージ半減',wave:'4ターンごとに暗黒波（防御無視）'},
+  stages:[
+   {enemy:'slime',reqNo:'R-0101',dest:'北門前進拠点',date:'異界暦3年4月2日',intel:'門の周辺にスライムが出現。動きは遅く、通常の小銃射撃で対処できる。',
+    hint:'弾は少し多めに。体を守る防弾チョッキ（レオンはM）と、念のため救急品も。',
+    lines:[{no:RIFLE_AMMO,qty:60,label:'小銃弾（5.56mm）',qtyText:'60発'},{no:MED,qty:2,label:'救急品セット',qtyText:'2セット'},{no:VEST,qty:1,size:'M',label:'防弾チョッキ（Mサイズ）',qtyText:'1枚'}]},
+   {enemy:'orc',reqNo:'R-0102',dest:'東の森陣地',date:'異界暦3年4月9日',intel:'森にオークの群れ。力が強く、持久戦になる。手榴弾と糧食で体力を確保したい。',
+    hint:'持久戦。弾は100発ほど、手榴弾を数個、体力をつける糧食を人数分（3人分）。',
+    lines:[{no:RIFLE_AMMO,qty:100,label:'小銃弾（5.56mm）',qtyText:'100発'},{no:GREN,qty:3,label:'手榴弾',qtyText:'3発'},{no:RATION,qty:3,label:'戦闘糧食',qtyText:'3人分'}]},
+   {enemy:'reaper',reqNo:'R-0103',dest:'古戦場の野営地',date:'異界暦3年5月1日',intel:'古戦場に死神が出る。霊体のため、聖水の加護がなければ弾が素通りする。',
+    hint:'聖水がなければ話にならない（予備も含めて2本）。弾100発と救急品3組。',
+    lines:[{no:HOLY,qty:2,label:'聖水',qtyText:'2本'},{no:RIFLE_AMMO,qty:100,label:'小銃弾（5.56mm）',qtyText:'100発'},{no:MED,qty:3,label:'救急品セット',qtyText:'3セット'}]},
+   {enemy:'dragon',reqNo:'R-0104',dest:'竜の峡谷前哨',date:'異界暦3年5月20日',intel:'峡谷にドラゴン。硬い鱗に小銃はほぼ効かない。重火器と炎への備えが必要。',
+    hint:'無反動砲1門と砲弾4発。炎には耐火マント（レオンはL）。救急品3組。',
+    lines:[{no:RR,qty:1,label:'無反動砲',qtyText:'1基'},{no:RR_AMMO,qty:4,label:'無反動砲弾',qtyText:'4発'},{no:MANTLE,qty:1,size:'L',label:'耐火マント（Lサイズ）',qtyText:'1枚'},{no:MED,qty:3,label:'救急品セット',qtyText:'3セット'}]},
+   {enemy:'maou',reqNo:'R-0105',dest:'魔王城前進拠点',date:'異界暦3年6月15日',intel:'魔王城へ突入する。闇の加護を聖水で打ち消し、ありったけの火力を集中させる。',
+    hint:'総力戦。弾150発、砲弾4発、手榴弾3個、救急品4組、力の霊薬2本、聖水1本。',
+    lines:[{no:RIFLE_AMMO,qty:150,label:'小銃弾（5.56mm）',qtyText:'150発'},{no:RR_AMMO,qty:4,label:'無反動砲弾',qtyText:'4発'},{no:GREN,qty:3,label:'手榴弾',qtyText:'3発'},{no:MED,qty:4,label:'救急品セット',qtyText:'4セット'},{no:POTION,qty:2,label:'力の霊薬',qtyText:'2本'},{no:HOLY,qty:1,label:'聖水',qtyText:'1本'}]},
+  ],
+  stock:{
+   normal:{[RIFLE]:Infinity,[RR]:Infinity,[RIFLE_AMMO]:500,[OLD_AMMO]:300,[RR_AMMO]:10,[GREN]:8,[MED]:14,[BAND]:20,[HOLY]:4,[OIL]:4,[POTION]:3,[RATION]:6,[VEST+'|S']:2,[VEST+'|M']:2,[VEST+'|L']:2,[MANTLE+'|S']:1,[MANTLE+'|M']:1,[MANTLE+'|L']:2},
+   hard:{[RIFLE]:2,[RR]:1,[RIFLE_AMMO]:430,[OLD_AMMO]:300,[RR_AMMO]:8,[GREN]:6,[MED]:12,[BAND]:10,[HOLY]:3,[OIL]:2,[POTION]:2,[RATION]:3,[VEST+'|S']:1,[VEST+'|M']:1,[VEST+'|L']:1,[MANTLE+'|S']:1,[MANTLE+'|M']:1,[MANTLE+'|L']:1},
+  },
+  startInv:{[RIFLE_AMMO]:30},
+  depotArt:{plaque:'補給所',labels:['弾薬','武器','医療','糧食','被服','聖具','弾薬','砲弾']},
+  prologue:['異界暦三年、春。','王都の外れに開いた「門」の向こうへ、わたしたち派遣補給隊は送り込まれた。','剣も魔法も使えない。わたしの武器は、帳簿とペンだけだ。','前線の兵士は、一枚の紙を頼りに戦う。','数字ひとつ、単位ひとつの書き損じが、誰かの命を左右する。','――今日も、書類が届く。'],
+  monologue:['初めての請求書だ。目録と照らし合わせて、一行ずつ丁寧に。','オークか。長い戦いになる。数字の桁だけは、間違えられない。','死神……弾が効かない相手には聖水が要る。書き漏らせば、それで終わりだ。','竜の炎。耐火マントも、隊員の体に合わなければただの布切れだ。','最後の請求書。ここまでの在庫で、足りるだろうか。'],
+ },
+
+ warehouse:{
+  key:'warehouse',kind:'service',label:'物流倉庫モード',desc:'物流センターから店舗へ商品を出荷する。結果は店舗の営業（品切れ・誤品）で評価。全5話',
+  terms:{req:'出荷依頼書',doc:'出荷伝票',depot:'物流センター',counter:'出荷事務所',relay:'検品場',front:'店舗',catTitle:'商品マスタ',catShort:'マスタ',runner:'店舗担当',relayP:'検品リーダー ハンス',recv:'店舗スタッフ ミレイ',carrier:'配送ドライバー ケンタ',signer:'ミレイ',report:'業務報告',brief:'本部連絡',briefTab:'本部連絡',courier:'配送ドライバー',outcome:'営業',reqFrom:'',stockWord:'在庫',frontMe:'わたし（店舗の発注担当）',depotMe:'わたし（出荷担当）',relayMe:'わたし（検品担当）',receiptBy:'受領者 ミレイ',reqSigner:'発注者 店舗',endOk:['全話クリア','どの店舗も棚が埋まり、お客さんは笑顔で帰っていった'],endNg:['業務終了','店舗の棚には空きが目立ち、お客さんが帰ってしまった…']},
+  units:['—','個','本','枚','袋','パック','ケース','箱','着','台'],sizes:['—','S','M','L'],
+  destinations:['みなと商店街店','駅前店','丘の上店','港町店','川沿い店','本部倉庫'],
+  catalog:[
+   {no:'W-1001',name:'天然水 2L（6本入）',unit:'ケース',note:'1ケース＝2Lペットボトル6本'},
+   {no:'W-1002',name:'天然水 500ml（24本入）',unit:'ケース',note:'1ケース＝500ml 24本',trap:'2Lとは別の商品',like:'W-1001'},
+   {no:'B-2001',name:'乾電池 単3（4本）',unit:'パック',note:'4本で1パック'},
+   {no:'B-2002',name:'乾電池 単4（4本）',unit:'パック',note:'4本で1パック',trap:'単3とは大きさが違う',like:'B-2001'},
+   {no:'U-3001',name:'ビニール傘',unit:'本',note:'1本ずつ'},
+   {no:'U-3002',name:'レインコート',unit:'着',sized:true,note:'サイズ指定あり'},
+   {no:'T-4001',name:'Tシャツ 白',unit:'枚',sized:true,note:'サイズ指定あり'},
+   {no:'T-4002',name:'Tシャツ 黒',unit:'枚',sized:true,note:'サイズ指定あり',trap:'色が違う',like:'T-4001'},
+   {no:'F-5001',name:'カップ麺 しょうゆ（12個入）',unit:'ケース',note:'1ケース＝12個'},
+   {no:'F-5002',name:'カップ麺 しょうゆ ミニ（12個入）',unit:'ケース',note:'1ケース＝12個',trap:'ミニサイズの別商品',like:'F-5001'},
+   {no:'P-6001',name:'トイレットペーパー（12ロール）',unit:'パック',note:'12ロールで1パック'},
+   {no:'G-7001',name:'貼るカイロ（10個入）',unit:'袋',note:'10個で1袋'},
+   {no:'G-7002',name:'貼らないカイロ（10個入）',unit:'袋',note:'10個で1袋',trap:'貼るタイプとは別の商品',like:'G-7001'},
+   {no:'D-8001',name:'加湿器',unit:'台',note:'1台ずつ'},
+  ],
+  stages:[
+   {event:'typhoon',title:'台風接近、防災用品が売れている',reqNo:'S-0101',dest:'みなと商店街店',from:'みなと商店街店',date:'6月12日',intel:'週末に台風が近づく予報。水・電池・傘がよく売れている。',
+    lines:[{no:'W-1001',qty:5,label:'天然水 2L',qtyText:'5箱',need:'天然水2Lが30本ほど売れる見込み（1ケース6本入）'},{no:'B-2001',qty:20,label:'乾電池 単3',qtyText:'20パック',need:'単3電池の4本パックが20パック'},{no:'U-3001',qty:30,label:'ビニール傘',qtyText:'30本',need:'ビニール傘が30本'}]},
+   {event:'spring',title:'新生活フェアで衣料が動く',reqNo:'S-0102',dest:'駅前店',from:'駅前店',date:'3月25日',intel:'新生活フェア。Tシャツの白はM、黒はLがよく出る。日用品もまとめ買いが多い。',
+    lines:[{no:'T-4001',qty:20,size:'M',label:'Tシャツ 白（M）',qtyText:'20枚',need:'白TシャツのMサイズが20枚'},{no:'T-4002',qty:10,size:'L',label:'Tシャツ 黒（L）',qtyText:'10枚',need:'黒TシャツのLサイズが10枚'},{no:'P-6001',qty:15,label:'トイレットペーパー',qtyText:'15袋',need:'トイレットペーパー12ロール入りが15パック'}]},
+   {event:'rain',title:'梅雨入り、雨具の需要',reqNo:'S-0103',dest:'丘の上店',from:'丘の上店',date:'6月20日',intel:'梅雨入り。通学用のレインコート（M）と傘、家で食べるカップ麺が売れる。',
+    lines:[{no:'U-3002',qty:12,size:'M',label:'レインコート（M）',qtyText:'12枚',need:'レインコートMサイズが12着'},{no:'U-3001',qty:40,label:'ビニール傘',qtyText:'40本',need:'ビニール傘が40本'},{no:'F-5001',qty:8,label:'カップ麺 しょうゆ',qtyText:'8箱',need:'カップ麺しょうゆが96個ほど（1ケース12個入）'}]},
+   {event:'cold',title:'寒波到来、暖房用品の需要',reqNo:'S-0104',dest:'港町店',from:'港町店',date:'1月18日',intel:'寒波で貼るカイロと加湿器が急に売れ始めた。リモコン用の単4電池も。',
+    lines:[{no:'G-7001',qty:30,label:'貼るカイロ',qtyText:'30袋',need:'貼るカイロ10個入りが30袋'},{no:'D-8001',qty:5,label:'加湿器',qtyText:'5個',need:'加湿器が5台'},{no:'B-2002',qty:10,label:'乾電池 単4',qtyText:'10パック',need:'単4電池4本パックが10パック'}]},
+   {event:'yearend',title:'年末大売り出し',reqNo:'S-0105',dest:'川沿い店',from:'川沿い店',date:'12月27日',intel:'年末の大売り出し。食品・日用品・衣料を幅広くそろえたい。',
+    lines:[{no:'F-5001',qty:12,label:'カップ麺 しょうゆ',qtyText:'12箱',need:'カップ麺しょうゆが144個（1ケース12個入）'},{no:'P-6001',qty:20,label:'トイレットペーパー',qtyText:'20袋',need:'トイレットペーパーが20パック'},{no:'T-4002',qty:15,size:'S',label:'Tシャツ 黒（S）',qtyText:'15枚',need:'黒TシャツのSサイズが15枚'},{no:'G-7001',qty:20,label:'貼るカイロ',qtyText:'20袋',need:'貼るカイロが20袋'},{no:'B-2001',qty:25,label:'乾電池 単3',qtyText:'25パック',need:'単3電池が25パック'},{no:'W-1002',qty:10,label:'天然水 500ml',qtyText:'10箱',need:'500mlの天然水が240本（1ケース24本入）'}]},
+  ],
+  startInv:{},
+  depotArt:{plaque:'物流センター',labels:['飲料','日用品','衣料','食品','雑貨','季節品','電池','雨具'],noRifles:true},
+  scenes:{relay:'hub',front:'shop'},
+  prologue:['四月。','わたしは、街の小さな店舗に商品を届ける物流センターに配属された。','棚に並ぶ一本の水も、一枚のシャツも、誰かが書いた伝票から始まる。','書き損じた一行は、店の棚の空白になる。','――今日も、出荷依頼が届く。'],
+  monologue:['台風前の注文だ。ケースとパック、単位を取り違えないように。','衣料はサイズと色。白と黒、MとL。一文字の違いが返品になる。','需要予測は本数で来る。ケース数に直すのを忘れずに。','単3と単4、貼ると貼らない。似た商品ほど危ない。','年末の大口注文。行数が多い。最後に行数を数え直そう。'],
+ },
+
+ delivery:{
+  key:'delivery',kind:'service',label:'宅配中継モード',desc:'集荷した荷物の送り状を書き、中継ベースを経て配達する。結果は配達（未配達・温度事故）で評価。全5話',
+  terms:{req:'集荷依頼書',doc:'送り状',depot:'集荷営業所',counter:'集荷受付カウンター',relay:'中継ベース',front:'配達営業所',catTitle:'荷物区分表',catShort:'区分表',runner:'営業所スタッフ',relayP:'仕分けリーダー ハンス',recv:'配達営業所 ミレイ',carrier:'セールスドライバー ケンタ',signer:'ケンタ',report:'業務報告',brief:'集荷連絡',briefTab:'集荷連絡',courier:'幹線トラック',outcome:'配達',reqFrom:'',stockWord:'積載枠',frontMe:'わたし（配達営業所の手配担当）',depotMe:'わたし（集荷担当）',relayMe:'わたし（仕分け担当）',receiptBy:'受領者 ケンタ',reqSigner:'依頼者',endOk:['全話クリア','荷物はすべて、待っている人の手に届いた'],endNg:['業務終了','届かなかった荷物が、営業所の棚に残っている…']},
+  units:['—','個','通','点','箱','袋','冊'],sizes:['—','常温','冷蔵','冷凍'],
+  destinations:['北区 A-1','北区 A-2','中央区 B-1','中央区 B-3','南区 C-2','港区 D-1'],
+  catalog:[
+   {no:'K-060',name:'宅配便 60サイズ',unit:'個',sized:true,note:'3辺合計60cmまで。規格に温度帯'},
+   {no:'K-060C',name:'宅配便 60サイズ（着払い）',unit:'個',sized:true,note:'運賃を受取人が払う',trap:'運賃の扱いが違う（受取人に請求してしまう）',like:'K-060'},
+   {no:'K-080',name:'宅配便 80サイズ',unit:'個',sized:true,note:'3辺合計80cmまで'},
+   {no:'K-100',name:'宅配便 100サイズ',unit:'個',sized:true,note:'3辺合計100cmまで'},
+   {no:'K-120',name:'宅配便 120サイズ',unit:'個',sized:true,note:'3辺合計120cmまで'},
+   {no:'K-160',name:'宅配便 160サイズ',unit:'個',sized:true,note:'3辺合計160cmまで'},
+   {no:'M-001',name:'メール便（A4・厚さ2cmまで）',unit:'通',note:'郵便受けに投函'},
+   {no:'M-002',name:'メール便 大型（厚さ3cmまで）',unit:'通',note:'郵便受けに投函',trap:'料金区分が違う',like:'M-001'},
+   {no:'L-001',name:'大型家具便',unit:'点',note:'2名で搬入'},
+  ],
+  stages:[
+   {event:'gift',title:'洋菓子店のお歳暮出荷',reqNo:'C-0101',dest:'中央区 B-1',from:'洋菓子店 ルミエール',date:'12月5日',intel:'冷凍ケーキは冷凍便、焼き菓子は常温で。カタログ冊子もまとめて送る。',
+    lines:[{no:'K-060',qty:6,size:'冷凍',label:'冷凍ケーキ（60サイズ・冷凍）',qtyText:'6箱',need:'冷凍ケーキ60サイズが6個（冷凍）'},{no:'K-060',qty:4,size:'常温',label:'焼き菓子（60サイズ・常温）',qtyText:'4箱',need:'焼き菓子60サイズが4個（常温）'},{no:'M-001',qty:20,label:'カタログ冊子（A4）',qtyText:'20冊',need:'A4カタログが20通'}]},
+   {event:'moving',title:'引っ越しシーズン',reqNo:'C-0102',dest:'北区 A-2',from:'引っ越しのお客さま',date:'3月28日',intel:'段ボールと大型家具。家具は2名で搬入する大型家具便で。',
+    lines:[{no:'K-120',qty:8,size:'常温',label:'段ボール（120サイズ）',qtyText:'8箱',need:'120サイズの段ボールが8個'},{no:'L-001',qty:2,label:'ベッド・本棚',qtyText:'2台',need:'大型家具が2点'},{no:'K-160',qty:3,size:'常温',label:'布団袋（160サイズ）',qtyText:'3袋',need:'160サイズの布団袋が3個'}]},
+   {event:'farm',title:'産直フェアの発送',reqNo:'C-0103',dest:'南区 C-2',from:'みどり農園',date:'7月14日',intel:'夏野菜は冷蔵、魚は冷凍。乾物は常温でよい。',
+    lines:[{no:'K-080',qty:10,size:'冷蔵',label:'夏野菜（80サイズ・冷蔵）',qtyText:'10箱',need:'夏野菜80サイズが10個（冷蔵）'},{no:'K-100',qty:5,size:'冷凍',label:'冷凍魚（100サイズ・冷凍）',qtyText:'5箱',need:'冷凍魚100サイズが5個（冷凍）'},{no:'K-060',qty:6,size:'常温',label:'乾物（60サイズ・常温）',qtyText:'6箱',need:'乾物60サイズが6個（常温）'}]},
+   {event:'sale',title:'通販セールの大量出荷',reqNo:'C-0104',dest:'港区 D-1',from:'通販ショップ みなと',date:'11月11日',intel:'セールで小物と冊子が大量に出た。すべて元払い（発送側が運賃を払う）。',
+    lines:[{no:'K-060',qty:25,size:'常温',label:'小物（60サイズ）',qtyText:'25個',need:'60サイズの小物が25個（常温・元払い）'},{no:'K-080',qty:15,size:'常温',label:'衣類（80サイズ）',qtyText:'15個',need:'80サイズの衣類が15個（常温）'},{no:'M-001',qty:40,label:'冊子（A4）',qtyText:'40冊',need:'A4冊子が40通'}]},
+   {event:'yearend',title:'年末の繁忙期',reqNo:'C-0105',dest:'北区 A-1',from:'商店会のみなさん',date:'12月28日',intel:'年末の荷物が一気に来た。温度帯と区分を一つずつ確かめる。',
+    lines:[{no:'K-060',qty:10,size:'冷凍',label:'冷凍食品（60サイズ・冷凍）',qtyText:'10箱',need:'冷凍食品60サイズが10個'},{no:'K-080',qty:12,size:'冷蔵',label:'生鮮（80サイズ・冷蔵）',qtyText:'12箱',need:'生鮮80サイズが12個（冷蔵）'},{no:'K-100',qty:10,size:'常温',label:'贈答品（100サイズ）',qtyText:'10箱',need:'100サイズの贈答品が10個（常温）'},{no:'K-120',qty:6,size:'常温',label:'家電（120サイズ）',qtyText:'6箱',need:'120サイズの家電が6個（常温）'},{no:'M-001',qty:50,label:'年賀カタログ（A4）',qtyText:'50冊',need:'A4カタログが50通'},{no:'L-001',qty:3,label:'こたつ・棚',qtyText:'3台',need:'大型家具が3点'}]},
+  ],
+  startInv:{},
+  depotArt:{plaque:'集荷営業所',labels:['60','80','100','120','冷凍','冷蔵','160','メール'],noRifles:true},
+  scenes:{relay:'hub',front:'street'},
+  prologue:['十二月。','わたしは、町の荷物を集めて送り出す集荷営業所で働いている。','荷物に貼る一枚の送り状が、その荷物の行き先も、温度も、運賃も決める。','冷凍を常温と書けば、ケーキは溶けて届く。','――今日も、集荷の依頼が入る。'],
+  monologue:['冷凍と常温が混ざった依頼だ。同じ60サイズでも温度帯が違う。','家具は宅配便じゃない。区分表をよく見よう。','冷蔵と冷凍、どっちだったか。依頼書の言葉を、そのまま区分表に当てはめる。','元払いと着払い。似た区分ほど、受取人に迷惑がかかる。','年末の大口。行数が多い。温度帯の書き漏れがないか、最後に確かめる。'],
+ },
+};
+const ROLES=[
+ {key:'depot',label:'補給所',alt:{warehouse:'物流センター（出荷）',delivery:'集荷営業所'},desc:'請求書を受け付け、目録と在庫を確認して払出票を書く'},
+ {key:'relay',label:'補給中継地点',alt:{warehouse:'検品場',delivery:'中継ベース'},desc:'届いた書類を、請求書・現品・目録と照合し、通過か差し戻しかを判断する'},
+ {key:'front',label:'前線',alt:{warehouse:'店舗（発注・受入）',delivery:'配達営業所（手配・受入）'},desc:'状況から必要な物と数を見積もって請求書を書き、届いた物を受領確認する'},
+];
+const MODES={
+ easy:{label:'簡単',guide:true,timer:0,enemyMul:0.7,stock:'unlimited',errs:1,pass:.6,items:['時間制限なし','記入・判断する場所を赤枠でガイド','在庫は無制限・敵は弱め','書き直し・章のやり直しができる']},
+ normal:{label:'普通',guide:false,timer:180,enemyMul:1.0,stock:'normal',errs:2,pass:.8,items:['制限時間3分・ガイドなし','在庫に上限（武器は無制限）','弾薬・消耗品の消費を常時カウント','やり直しはできない（失敗で終了）']},
+ hard:{label:'難しい',guide:false,timer:120,enemyMul:1.1,stock:'hard',errs:3,pass:.9,items:['制限時間2分のタイムアタック','武器・装備品も在庫制限','在庫に余裕なし。過剰な払出は命取り','やり直しはできない（失敗で終了）']},
+};
+// 業務シナリオの在庫を、全話の需要から自動で決める
+['warehouse','delivery'].forEach(k=>{const S=SCENARIOS[k],tot={};S.stages.forEach(st=>st.lines.forEach(l=>{const key=l.size?l.no+'|'+l.size:l.no;tot[key]=(tot[key]||0)+l.qty}));
+ const mk=f=>{const o={};S.catalog.forEach(it=>{if(it.sized)S.sizes.slice(1).forEach(z=>o[it.no+'|'+z]=Math.ceil(5*f));else o[it.no]=Math.ceil(10*f)});Object.entries(tot).forEach(([kk,v])=>o[kk]=Math.ceil(v*(f>1?1.35:1.08))+(f>1?3:0));return o};
+ S.stock={normal:mk(2),hard:mk(1)}});
+let SC=SCENARIOS.fantasy,CAT={};
+function useScenario(k){SC=SCENARIOS[k];CAT={};SC.catalog.forEach(c=>CAT[c.no]=c)}
+useScenario('fantasy');
+const cat=no=>CAT[no];
+const TM=()=>SC.terms;
+
+const SCENE_OF={slime:'gate',orc:'forest',reaper:'graveyard',dragon:'canyon',maou:'castle'};
+const GLOW_OF={slime:'rgba(120,255,190,.45)',orc:'rgba(255,210,90,.35)',reaper:'rgba(120,240,255,.5)',dragon:'rgba(255,120,40,.55)',maou:'rgba(220,40,80,.6)'};
+
+/* ============ 背景シーン ============ */
+function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function ridge(r,y,amp,step,fill,op){let d=`M0 900 L0 ${y}`;let cy=y;for(let x=0;x<=1600;x+=step){cy=Math.max(y-amp,Math.min(y+amp*.4,cy+(r()-.5)*amp*.9));d+=` L${x} ${cy.toFixed(0)}`}d+=` L1600 ${cy.toFixed(0)}`;return `<path d="${d} L1600 900Z" fill="${fill}" ${op?`opacity="${op}"`:''}/>`}
+function pine(x,b,h,f){const w=h*.42;let d='';for(let i=0;i<3;i++){const t=b-h*i*.28,hh=h*.5,ww=w*(1-i*.22);d+=`M${x-ww} ${t} L${x} ${t-hh} L${x+ww} ${t}Z `}return `<path d="${d} M${x-3} ${b} h6 v14 h-6Z" fill="${f}"/>`}
+const SCENES={
+ gate:{sky:['#070a26','#221d5a','#5b3a78'],moon:['#f6edcf',1270,160,58],stars:150},
+ forest:{sky:['#03100f','#0c2a2a','#2c5548'],moon:['#eaf3d6',300,150,44],stars:90},
+ graveyard:{sky:['#060a0c','#16231f','#46625a'],moon:['#e7f0dc',820,250,120],stars:60},
+ canyon:{sky:['#140403','#4f150a','#c2501a'],moon:null,stars:0},
+ castle:{sky:['#060108','#26050f','#6d0f1f'],moon:['#ff6a4a',1180,190,70],stars:40},
+ desk:{desk:true},
+};
+function sceneSVG(name){
+ const S=SCENES[name],r=seeded(name.length*97+13),u='s'+(++UID);
+ if(S.desk){
+  let planks='';for(let i=0;i<9;i++){const y=i*110;planks+=`<rect x="0" y="${y}" width="1600" height="108" fill="url(#w${u})" opacity="${.85+r()*.15}"/><path d="M0 ${y+108} H1600" stroke="#120904" stroke-width="3"/>`;for(let k=0;k<6;k++){const yy=y+10+r()*90;planks+=`<path d="M0 ${yy} C400 ${yy+r()*12-6} 900 ${yy+r()*12-6} 1600 ${yy}" stroke="#2a1608" stroke-width="${.6+r()*1.4}" opacity=".5" fill="none"/>`}}
+  return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="w${u}" x1="0" x2="1"><stop offset="0" stop-color="#3b2010"/><stop offset=".5" stop-color="#4c2a15"/><stop offset="1" stop-color="#341b0c"/></linearGradient>
+   <radialGradient id="c${u}" cx="12%" cy="8%" r="75%"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".55"/><stop offset=".35" stop-color="#ff9a3a" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+   <radialGradient id="v${u}" cx="50%" cy="50%" r="75%"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".8"/></radialGradient></defs>
+   ${planks}<rect width="1600" height="900" fill="url(#c${u})"/><rect width="1600" height="900" fill="url(#v${u})"/></svg>`;
+ }
+ let stars='';for(let i=0;i<S.stars;i++){const x=r()*1600,y=r()*520,s=r()*1.6+.3;stars+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${s.toFixed(1)}" fill="#fff" opacity="${(.3+r()*.7).toFixed(2)}"/>`}
+ const m=S.moon?`<circle cx="${S.moon[1]}" cy="${S.moon[2]}" r="${S.moon[3]*2.6}" fill="url(#mg${u})"/><circle cx="${S.moon[1]}" cy="${S.moon[2]}" r="${S.moon[3]}" fill="${S.moon[0]}"/><circle cx="${S.moon[1]-S.moon[3]*.3}" cy="${S.moon[2]-S.moon[3]*.2}" r="${S.moon[3]*.18}" fill="#000" opacity=".06"/><circle cx="${S.moon[1]+S.moon[3]*.25}" cy="${S.moon[2]+S.moon[3]*.3}" r="${S.moon[3]*.12}" fill="#000" opacity=".07"/>`:'';
+ let fg='';
+ if(name==='gate'){
+  fg+=ridge(r,560,120,40,'#1d1a48')+ridge(r,640,70,50,'#131433');
+  fg+=`<g transform="translate(800 690)"><ellipse cx="0" cy="-150" rx="120" ry="175" fill="url(#pg${u})" class="portal"/>
+   <path d="M-190 40 V-170 C-190 -330 190 -330 190 -170 V40 H130 V-160 C130 -270 -130 -270 -130 -160 V40Z" fill="#2b2a3e" stroke="#0a0a18" stroke-width="4"/>
+   <path d="M-150 -250 l18 10 M-60 -295 l6 18 M60 -295 l-6 18 M150 -250 l-18 10" stroke="#8fd6ff" stroke-width="4" opacity=".7"/>
+   <rect x="-215" y="30" width="430" height="26" fill="#1c1b2c"/></g>`;
+  fg+=ridge(r,760,40,60,'#0b0c1f');
+ } else if(name==='forest'){
+  fg+=ridge(r,520,90,50,'#0e2a29');
+  for(let i=0;i<26;i++)fg+=pine(r()*1600,640+r()*20,170+r()*80,'#0c2423');
+  fg+=`<rect y="600" width="1600" height="80" fill="#cfe" opacity=".06" filter="url(#bl${u})"/>`;
+  for(let i=0;i<18;i++)fg+=pine(r()*1600,780+r()*30,240+r()*120,'#061514');
+  fg+=`<rect y="800" width="1600" height="100" fill="#040d0c"/>`;
+ } else if(name==='graveyard'){
+  fg+=ridge(r,600,50,60,'#13201d');
+  fg+=`<path d="M1180 640 C1175 520 1190 440 1170 360 M1176 470 C1220 430 1250 420 1290 380 M1172 420 C1130 380 1110 350 1080 340 M1182 540 C1230 520 1260 500 1300 505" stroke="#0a110f" stroke-width="16" fill="none" stroke-linecap="round"/>`;
+  for(let i=0;i<14;i++){const x=80+i*110+r()*40,y=690+r()*40,h=50+r()*40;fg+=(r()<.35)?`<path d="M${x-6} ${y} V${y-h} H${x-26} V${y-h-14} H${x-6} V${y-h-34} H${x+6} V${y-h-14} H${x+26} V${y-h} H${x+6} V${y}Z" fill="#0d1513"/>`:`<path d="M${x-22} ${y} V${y-h+18} Q${x-22} ${y-h} ${x} ${y-h} Q${x+22} ${y-h} ${x+22} ${y-h+18} V${y}Z" fill="#101917"/>`}
+  fg+=ridge(r,720,25,60,'#08100e');
+  fg+=`<rect y="660" width="1600" height="120" fill="#dfe" opacity=".08" filter="url(#bl${u})"/>`;
+ } else if(name==='canyon'){
+  fg+=`<path d="M0 900 V180 L120 240 L180 330 L260 360 L330 470 L420 520 L470 640 L520 700 L560 900Z" fill="#2a0c06"/>
+   <path d="M1600 900 V140 L1500 220 L1430 300 L1360 340 L1300 460 L1220 520 L1170 650 L1110 720 L1060 900Z" fill="#250a05"/>
+   <path d="M0 900 V420 L90 460 L150 560 L230 610 L300 720 L340 900Z" fill="#160503"/>
+   <path d="M1600 900 V400 L1520 470 L1460 560 L1390 620 L1320 740 L1280 900Z" fill="#140403"/>
+   <ellipse cx="800" cy="900" rx="560" ry="120" fill="url(#lv${u})"/>`;
+ } else if(name==='castle'){
+  fg+=ridge(r,620,60,50,'#1a040b');
+  fg+=`<g fill="#0c0206"><path d="M520 640 V420 H560 V380 L580 330 L600 380 V420 H640 V520 H700 V300 H720 L745 200 L770 300 H790 V520 H820 V240 H835 L860 110 L885 240 H900 V520 H930 V300 H950 L975 200 L1000 300 H1020 V520 H1080 V420 H1120 V380 L1140 330 L1160 380 V420 H1200 V640Z"/></g>
+   <g fill="#ff8a3a" opacity=".85"><rect x="852" y="300" width="16" height="26" rx="8"/><rect x="738" y="360" width="12" height="20" rx="6"/><rect x="968" y="360" width="12" height="20" rx="6"/><rect x="572" y="460" width="10" height="16" rx="5"/><rect x="1132" y="460" width="10" height="16" rx="5"/></g>`;
+  fg+=ridge(r,720,40,60,'#090105');
+ }
+ return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs>
+  <linearGradient id="sk${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${S.sky[0]}"/><stop offset=".6" stop-color="${S.sky[1]}"/><stop offset="1" stop-color="${S.sky[2]}"/></linearGradient>
+  ${S.moon?`<radialGradient id="mg${u}"><stop offset="0" stop-color="${S.moon[0]}" stop-opacity=".45"/><stop offset="1" stop-color="${S.moon[0]}" stop-opacity="0"/></radialGradient>`:''}
+  <radialGradient id="pg${u}"><stop offset="0" stop-color="#e8fbff"/><stop offset=".35" stop-color="#7fd3ff"/><stop offset=".7" stop-color="#6a3fd6" stop-opacity=".8"/><stop offset="1" stop-color="#2a1a6a" stop-opacity="0"/></radialGradient>
+  <radialGradient id="lv${u}"><stop offset="0" stop-color="#ffd27a"/><stop offset=".4" stop-color="#ff6a1a" stop-opacity=".8"/><stop offset="1" stop-color="#7a1a05" stop-opacity="0"/></radialGradient>
+  <filter id="bl${u}"><feGaussianBlur stdDeviation="22"/></filter>
+ </defs><rect width="1600" height="900" fill="url(#sk${u})"/>${stars}${m}${fg}
+ <style>.portal{animation:portal 4s ease-in-out infinite;transform-origin:center;transform-box:fill-box}@keyframes portal{50%{opacity:.7;transform:scale(1.04)}}</style></svg>`;
+}
+
+/* ============ 浮遊する光 ============ */
+const FXC=$('#fx'),FX=FXC.getContext('2d');let parts=[],ptype='gate';
+const PCONF={gate:{n:40,c:[150,210,255],up:-.15,s:[1,2.4]},forest:{n:36,c:[210,255,120],up:-.05,s:[1.2,2.6]},graveyard:{n:26,c:[170,255,220],up:-.08,s:[1.5,3.2]},canyon:{n:60,c:[255,150,60],up:-.7,s:[1,2.4]},castle:{n:50,c:[255,90,70],up:-.4,s:[1,2.2]},desk:{n:24,c:[255,220,160],up:-.03,s:[.6,1.4]}};
+function fxSize(){FXC.width=innerWidth*devicePixelRatio;FXC.height=innerHeight*devicePixelRatio}
+function setParticles(t){ptype=t;const c=PCONF[t];parts=Array.from({length:c.n},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,s:rnd(c.s[0],c.s[1]),vx:rnd(-.2,.2),vy:c.up*rnd(.5,1.5),ph:Math.random()*6.28}))}
+function fxLoop(){if(!document.hidden&&!REDUCED){const c=PCONF[ptype],d=devicePixelRatio;FX.clearRect(0,0,FXC.width,FXC.height);for(const p of parts){p.ph+=.03;p.x+=p.vx+Math.sin(p.ph)*.2;p.y+=p.vy;if(p.y<-10){p.y=innerHeight+10;p.x=Math.random()*innerWidth}if(p.x<-10)p.x=innerWidth+10;if(p.x>innerWidth+10)p.x=-10;const a=.35+.45*Math.sin(p.ph*1.3);const g=FX.createRadialGradient(p.x*d,p.y*d,0,p.x*d,p.y*d,p.s*4*d);g.addColorStop(0,`rgba(${c.c},${a})`);g.addColorStop(1,`rgba(${c.c},0)`);FX.fillStyle=g;FX.beginPath();FX.arc(p.x*d,p.y*d,p.s*4*d,0,6.28);FX.fill()}}requestAnimationFrame(fxLoop)}
+addEventListener('resize',fxSize);fxSize();requestAnimationFrame(fxLoop);
+
+/* ============ 魔物の絵 ============ */
+function monsterSVG(k){const u='m'+(++UID);
+ if(k==='slime')return `<svg viewBox="0 0 300 300"><defs><radialGradient id="a${u}" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#c8ffe2"/><stop offset=".45" stop-color="#3fd08b"/><stop offset="1" stop-color="#0f5a39"/></radialGradient></defs>
+  <ellipse cx="150" cy="268" rx="108" ry="14" fill="#000" opacity=".4"/>
+  <path d="M42 262 C24 262 22 228 48 206 C70 150 96 84 150 70 C204 84 230 150 252 206 C278 228 276 262 258 262Z" fill="url(#a${u})" stroke="#0b3d27" stroke-width="3"/>
+  <ellipse cx="112" cy="124" rx="24" ry="12" fill="#fff" opacity=".6" transform="rotate(-28 112 124)"/><circle cx="96" cy="150" r="5" fill="#fff" opacity=".5"/>
+  <ellipse cx="122" cy="188" rx="11" ry="16" fill="#0b1f17"/><ellipse cx="178" cy="188" rx="11" ry="16" fill="#0b1f17"/><circle cx="126" cy="182" r="4" fill="#fff"/><circle cx="182" cy="182" r="4" fill="#fff"/>
+  <path d="M134 220 Q150 232 166 220" stroke="#0b1f17" stroke-width="4.5" fill="none" stroke-linecap="round"/></svg>`;
+ if(k==='orc')return `<svg viewBox="0 0 300 300"><defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7f9c52"/><stop offset="1" stop-color="#1e2c13"/></linearGradient><linearGradient id="b${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2e6ea"/><stop offset="1" stop-color="#6c737c"/></linearGradient></defs>
+  <ellipse cx="150" cy="282" rx="110" ry="12" fill="#000" opacity=".45"/>
+  <path d="M236 278 L222 70" stroke="#4a2e16" stroke-width="9" stroke-linecap="round"/>
+  <path d="M220 62 C258 46 290 84 278 128 C262 112 244 106 228 110Z" fill="url(#b${u})" stroke="#2a2e33" stroke-width="2"/>
+  <path d="M74 280 L84 196 C74 160 96 128 150 124 C204 128 226 160 216 196 L226 280Z" fill="url(#a${u})" stroke="#10180a" stroke-width="2"/>
+  <path d="M52 182 C56 146 98 134 122 142 L178 142 C202 134 244 146 248 182 C252 206 236 218 220 212 L80 212 C64 218 48 206 52 182Z" fill="url(#a${u})" stroke="#10180a" stroke-width="2"/>
+  <path d="M66 190 C46 222 52 250 70 268" stroke="#4f6a33" stroke-width="28" stroke-linecap="round" fill="none"/><path d="M234 190 C246 160 238 130 228 112" stroke="#4f6a33" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <rect x="84" y="226" width="132" height="14" fill="#3a2410"/><rect x="140" y="223" width="20" height="20" fill="#b8913a"/>
+  <path d="M108 122 C102 80 124 52 150 52 C176 52 198 80 192 122 C188 144 168 154 150 154 C132 154 112 144 108 122Z" fill="url(#a${u})" stroke="#10180a" stroke-width="2"/>
+  <path d="M118 92 L142 100 M182 92 L158 100" stroke="#10180a" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="134" cy="106" rx="7" ry="4.5" fill="#ffe14a"/><ellipse cx="166" cy="106" rx="7" ry="4.5" fill="#ffe14a"/>
+  <path d="M132 136 L126 112 L140 132Z M168 136 L174 112 L160 132Z" fill="#f4ecd6"/></svg>`;
+ if(k==='reaper')return `<svg viewBox="0 0 300 300"><defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#363d4e"/><stop offset="1" stop-color="#05060a"/></linearGradient><linearGradient id="b${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f2f6f8"/><stop offset="1" stop-color="#8a96a0"/></linearGradient><radialGradient id="c${u}"><stop offset="0" stop-color="#9ff7ff" stop-opacity=".45"/><stop offset="1" stop-color="#9ff7ff" stop-opacity="0"/></radialGradient></defs>
+  <ellipse cx="150" cy="160" rx="140" ry="150" fill="url(#c${u})"/>
+  <path d="M58 290 L100 30" stroke="#3b2a1a" stroke-width="7" stroke-linecap="round"/>
+  <path d="M98 34 C146 0 222 12 262 62 C214 44 160 46 112 64Z" fill="url(#b${u})" stroke="#38424a" stroke-width="2"/>
+  <path d="M150 38 C104 38 84 84 87 130 C70 190 60 240 54 284 L80 268 L100 290 L120 268 L140 292 L160 268 L180 292 L200 268 L222 290 L246 284 C240 240 230 190 213 130 C216 84 196 38 150 38Z" fill="url(#a${u})" stroke="#000" stroke-width="2"/>
+  <path d="M150 68 C124 68 112 94 114 124 C119 145 134 154 150 154 C166 154 181 145 186 124 C188 94 176 68 150 68Z" fill="#000"/>
+  <circle cx="137" cy="112" r="6" fill="#bffaff"/><circle cx="163" cy="112" r="6" fill="#bffaff"/><circle cx="137" cy="112" r="14" fill="#7ff0ff" opacity=".25"/><circle cx="163" cy="112" r="14" fill="#7ff0ff" opacity=".25"/>
+  <path d="M90 170 C80 160 76 150 82 142 C90 148 96 156 100 166" fill="#d8dde0"/></svg>`;
+ if(k==='dragon')return `<svg viewBox="0 0 300 300"><defs><linearGradient id="a${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a2a1a"/><stop offset="1" stop-color="#2a0806"/></linearGradient><linearGradient id="b${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e1810"/><stop offset="1" stop-color="#1a0403"/></linearGradient><radialGradient id="c${u}"><stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#ff7a1a" stop-opacity=".7"/><stop offset="1" stop-color="#ff3a00" stop-opacity="0"/></radialGradient></defs>
+  <g opacity=".95"><path d="M140 176 C100 110 50 80 4 96 C24 116 30 136 22 162 C46 150 60 160 68 180 C82 170 100 176 112 194Z" fill="url(#b${u})" stroke="#140302" stroke-width="2"/>
+  <path d="M4 96 L68 180 M22 162 L100 150 M30 120 L110 140" stroke="#140302" stroke-width="2" opacity=".6"/>
+  <g transform="translate(300 0) scale(-1 1)"><path d="M140 176 C100 110 50 80 4 96 C24 116 30 136 22 162 C46 150 60 160 68 180 C82 170 100 176 112 194Z" fill="url(#b${u})" stroke="#140302" stroke-width="2"/><path d="M4 96 L68 180 M22 162 L100 150 M30 120 L110 140" stroke="#140302" stroke-width="2" opacity=".6"/></g></g>
+  <path d="M192 252 C232 262 262 240 292 256 C270 272 232 288 190 274Z" fill="url(#a${u})"/>
+  <path d="M106 284 C96 226 112 172 150 160 C188 172 204 226 194 284Z" fill="url(#a${u})" stroke="#140302" stroke-width="2"/>
+  <path d="M128 200 H172 M124 222 H176 M122 244 H178 M122 266 H178" stroke="#e0a060" stroke-width="2" opacity=".35"/>
+  <path d="M134 172 C128 132 134 102 150 86 C166 102 172 132 166 172Z" fill="url(#a${u})" stroke="#140302" stroke-width="2"/>
+  <path d="M128 60 L108 22 L138 52Z M172 60 L192 22 L162 52Z" fill="#d9c49a"/>
+  <path d="M118 80 C122 56 138 44 150 44 C162 44 178 56 182 80 C178 96 166 108 150 112 C134 108 122 96 118 80Z" fill="url(#a${u})" stroke="#140302" stroke-width="2"/>
+  <path d="M130 72 L144 77 M170 72 L156 77" stroke="#ffcf4a" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="150" cy="122" rx="30" ry="18" fill="url(#c${u})"/></svg>`;
+ return `<svg viewBox="0 0 300 300"><defs><radialGradient id="a${u}"><stop offset="0" stop-color="#ff3a5a" stop-opacity=".55"/><stop offset=".6" stop-color="#6a0a3a" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><linearGradient id="b${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a1050"/><stop offset="1" stop-color="#0c0210"/></linearGradient><linearGradient id="c${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#9a6a1a"/></linearGradient><radialGradient id="d${u}"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#c060ff"/><stop offset="1" stop-color="#5a10a0" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="150" cy="140" r="145" fill="url(#a${u})"/>
+  <path d="M60 290 L66 70" stroke="#2a1a10" stroke-width="7" stroke-linecap="round"/><circle cx="66" cy="62" r="22" fill="url(#d${u})"/>
+  <path d="M150 92 C88 102 50 182 28 290 L272 290 C250 182 212 102 150 92Z" fill="url(#b${u})" stroke="#000" stroke-width="2"/>
+  <path d="M150 92 C120 110 104 150 98 200" stroke="#a01a3a" stroke-width="3" fill="none" opacity=".7"/><path d="M150 92 C180 110 196 150 202 200" stroke="#a01a3a" stroke-width="3" fill="none" opacity=".7"/>
+  <path d="M116 290 C116 212 126 152 150 142 C174 152 184 212 184 290Z" fill="#160a1c"/>
+  <path d="M100 150 C104 130 120 124 134 128 L120 148Z M200 150 C196 130 180 124 166 128 L180 148Z" fill="url(#c${u})"/>
+  <path d="M134 74 C112 62 96 36 106 8 C116 34 128 48 144 62Z M166 74 C188 62 204 36 194 8 C184 34 172 48 156 62Z" fill="#2a1d2e" stroke="#000" stroke-width="1.5"/>
+  <path d="M130 102 C128 76 138 62 150 62 C162 62 172 76 170 102 C168 118 160 128 150 128 C140 128 132 118 130 102Z" fill="#2c1832" stroke="#000" stroke-width="1.5"/>
+  <path d="M130 72 L135 56 L142 66 L150 50 L158 66 L165 56 L170 72Z" fill="url(#c${u})"/>
+  <path d="M137 96 L147 99 M163 96 L153 99" stroke="#ff2a3a" stroke-width="4.5" stroke-linecap="round"/><circle cx="142" cy="98" r="10" fill="#ff2a3a" opacity=".25"/><circle cx="158" cy="98" r="10" fill="#ff2a3a" opacity=".25"/></svg>`;
+}
+
+/* ============ 物品アイコン ============ */
+function flask(c){return `<path d="M13 4h6v6l5.5 8.5A6 6 0 0 1 19.5 27h-7A6 6 0 0 1 7.5 18.5L13 10z" fill="${c}" stroke="#1a1208" stroke-width="1.2"/><path d="M12 3h8" stroke="#c9a04f" stroke-width="2"/><ellipse cx="13" cy="19" rx="2" ry="3" fill="#fff" opacity=".45"/>`}
+function itemIcon(no){const m={
+ [RIFLE]:`<path d="M2 15h17l2-2h8v4h-6l-3 2.5H13l-2.5 6H6.5l1.5-6H2z" fill="#a8adb5" stroke="#2a2e33"/><path d="M8 19.5l-1 3" stroke="#5a3a1a" stroke-width="2"/>`,
+ [RR]:`<rect x="2" y="12" width="26" height="7" rx="2" fill="#6f7a52" stroke="#20251a"/><rect x="26" y="10.5" width="4" height="10" rx="1" fill="#4a5236"/><path d="M12 19l-1 6h3l1-6" fill="#3a2a1a"/>`,
+ [RIFLE_AMMO]:`<path d="M10 9c0-4 4-6 4-6s4 2 4 6z" fill="#d48a3a"/><rect x="10" y="9" width="8" height="18" fill="#e6c25a" stroke="#6a4a10"/><rect x="10" y="24" width="8" height="3" fill="#a07a20"/>`,
+ [OLD_AMMO]:`<path d="M9 10c0-4 5-7 5-7s5 3 5 7z" fill="#8a8a8a"/><rect x="9" y="10" width="10" height="17" fill="#b8a070" stroke="#4a3a10"/>`,
+ [RR_AMMO]:`<path d="M10 11c0-6 6-9 6-9s6 3 6 9z" fill="#5a6a3a"/><rect x="10" y="11" width="12" height="17" fill="#7c8a52" stroke="#2a3015"/><rect x="10" y="15" width="12" height="2" fill="#e0c060"/>`,
+ [GREN]:`<circle cx="15" cy="19" r="8.5" fill="#5f6e3c" stroke="#1e2412"/><path d="M11 15h8M10 19h10M11 23h8" stroke="#3a4424"/><rect x="13" y="7" width="5" height="4" fill="#8a8f96"/><path d="M18 8c4 0 6 3 5 7" stroke="#8a8f96" stroke-width="1.6" fill="none"/>`,
+ [MED]:`<rect x="4" y="8" width="24" height="18" rx="3" fill="#f4efe4" stroke="#6a5a40"/><path d="M16 11v12M10 17h12" stroke="#c0281e" stroke-width="4"/><path d="M12 8V5h8v3" stroke="#6a5a40" fill="none" stroke-width="1.6"/>`,
+ [BAND]:`<circle cx="15" cy="16" r="10" fill="#efe2c4" stroke="#7a6a48"/><circle cx="15" cy="16" r="4" fill="#cbb98e"/><path d="M24 20h6v4h-8" fill="#efe2c4" stroke="#7a6a48"/>`,
+ [HOLY]:flask('#7fd3ff'),[OIL]:flask('#d9a43a'),[POTION]:flask('#e0403a'),
+ [MANTLE]:`<path d="M10 4h12l2 4c5 6 5 14 4 20H4c-1-6-1-14 4-20z" fill="#c2481e" stroke="#4a1208"/><path d="M16 8v20" stroke="#7a2410" opacity=".6"/><circle cx="16" cy="6" r="2" fill="#e0b040"/>`,
+ [VEST]:`<path d="M9 4h4l3 3 3-3h4l4 5v18H5V9z" fill="#4c5a3a" stroke="#1a2010"/><path d="M8 14h16M8 20h16" stroke="#2a3220"/>`,
+ [RATION]:`<rect x="5" y="9" width="22" height="16" rx="3" fill="#8a6a3a" stroke="#3a2a10"/><path d="M5 14h22" stroke="#3a2a10"/><path d="M10 19h12" stroke="#e8d7a8" stroke-width="2"/>`,
+ };return `<svg viewBox="0 0 32 32">${m[no]||'<circle cx="16" cy="16" r="8" fill="#888"/>'}</svg>`}
+
+/* ============ 追加の背景：補給所・中継地点・前線 ============ */
+function depotSVG(){const r=seeded(4242),u='d'+(++UID);
+ const DP=SC.depotArt||{};const labels=DP.labels||['弾薬','武器','医療','糧食','被服','聖具','弾薬','砲弾'];
+ let crates='';
+ const shelf=(y,x0,x1)=>{let x=x0,i=0;while(x<x1-90){const w=100+r()*50,h=80+r()*45;crates+=`<g><rect x="${x}" y="${y-h}" width="${w}" height="${h}" fill="url(#cr${u})" stroke="#24130a" stroke-width="3"/><path d="M${x} ${y-h*.5} H${x+w}" stroke="#3a2212" stroke-width="2" opacity=".6"/><path d="M${x+6} ${y-h+6} L${x+w-6} ${y-6} M${x+w-6} ${y-h+6} L${x+6} ${y-6}" stroke="#3a2212" stroke-width="3" opacity=".35"/><text x="${x+w/2}" y="${y-h/2+10}" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="28" fill="#eadbb0" opacity=".75">${labels[(i++)%labels.length]}</text></g>`;x+=w+8+r()*16}};
+ shelf(330,170,1440);shelf(570,170,760);shelf(570,980,1440);
+ let barrels='';for(const bx of [800,880]){barrels+=`<g><rect x="${bx-34}" y="470" width="68" height="100" rx="14" fill="#5a3518" stroke="#24130a" stroke-width="3"/><path d="M${bx-34} 495 H${bx+34} M${bx-34} 545 H${bx+34}" stroke="#8a8f96" stroke-width="5"/></g>`}
+ let rifles='';for(let i=0;i<6;i++){const x=60+i*16;rifles+=`<path d="M${x} 690 L${x+6} 420" stroke="#2a2a2a" stroke-width="7" stroke-linecap="round"/><path d="M${x-2} 690 l-6 -60 h12z" fill="#5a3a1a"/>`}
+ const lantern=(x)=>`<path d="M${x} 130 V180" stroke="#1a0d05" stroke-width="3"/><circle cx="${x}" cy="215" r="300" fill="url(#lg${u})"/><rect x="${x-18}" y="180" width="36" height="50" rx="5" fill="#ffd27a" stroke="#2a160a" stroke-width="4"/><path d="M${x-22} 180 h44 M${x-22} 230 h44" stroke="#2a160a" stroke-width="6"/>`;
+ return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs>
+  <linearGradient id="wl${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c0f07"/><stop offset="1" stop-color="#2e1a0c"/></linearGradient>
+  <linearGradient id="cr${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a6236"/><stop offset="1" stop-color="#5a3c1e"/></linearGradient>
+  <linearGradient id="ct${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4f2c"/><stop offset="1" stop-color="#3b2212"/></linearGradient>
+  <radialGradient id="lg${u}"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".45"/><stop offset=".4" stop-color="#ff9a3a" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vg${u}" cx="50%" cy="45%" r="75%"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".75"/></radialGradient></defs>
+  <rect width="1600" height="900" fill="url(#wl${u})"/>
+  ${Array.from({length:21},(_,i)=>`<path d="M${i*80} 0 V900" stroke="#120904" stroke-width="3" opacity=".7"/>`).join('')}
+  <rect y="90" width="1600" height="40" fill="#1a0d05"/><rect x="110" y="90" width="34" height="700" fill="#1a0d05"/><rect x="1456" y="90" width="34" height="700" fill="#1a0d05"/>
+  <rect x="640" y="100" width="320" height="64" rx="6" fill="#3a2212" stroke="#c9a04f" stroke-width="3"/><text x="800" y="146" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="38" fill="#f0d58d" letter-spacing="10">${DP.plaque||'補給所'}</text>
+  ${crates}<rect x="160" y="330" width="1290" height="18" fill="#3a2212"/><rect x="160" y="570" width="1290" height="18" fill="#3a2212"/>
+  ${barrels}${DP.noRifles?'':rifles}${lantern(470)}${lantern(1130)}
+  <rect y="760" width="1600" height="140" fill="#140a04"/>
+  <rect y="690" width="1600" height="26" fill="url(#ct${u})"/><rect y="716" width="1600" height="184" fill="#3e2413"/>
+  ${Array.from({length:9},(_,i)=>`<rect x="${i*180+20}" y="736" width="150" height="150" fill="none" stroke="#24130a" stroke-width="4" opacity=".7"/>`).join('')}
+  <g transform="translate(1150 650)"><path d="M0 40 L90 30 L180 40 L180 48 L90 40 L0 48Z" fill="#f2e6c8" stroke="#6b4a2a"/><path d="M90 30 V40" stroke="#6b4a2a"/></g>
+  <g transform="translate(1390 640)"><rect x="0" y="22" width="34" height="28" rx="6" fill="#1a1a2a"/><path d="M28 24 L70 -30" stroke="#f2ede0" stroke-width="5" stroke-linecap="round"/></g>
+  <g transform="translate(300 646)"><ellipse cx="30" cy="44" rx="34" ry="8" fill="#8a6a2a"/><path d="M0 44 C0 10 60 10 60 44Z" fill="#c9a04f" stroke="#6b4a1a" stroke-width="2"/><circle cx="30" cy="12" r="5" fill="#e0b84a"/></g>
+  <rect width="1600" height="900" fill="url(#vg${u})"/></svg>`}
+function relaySVG(){const r=seeded(777),u='r'+(++UID);
+ let stars='';for(let i=0;i<60;i++)stars+=`<circle cx="${(r()*1600).toFixed(0)}" cy="${(r()*300).toFixed(0)}" r="${(r()*1.4+.3).toFixed(1)}" fill="#fff" opacity="${(.3+r()*.6).toFixed(2)}"/>`;
+ return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs>
+  <linearGradient id="sk${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14112e"/><stop offset=".55" stop-color="#5a2f55"/><stop offset="1" stop-color="#e0864a"/></linearGradient>
+  <linearGradient id="tn${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a7350"/><stop offset=".5" stop-color="#c2a676"/><stop offset="1" stop-color="#7a6444"/></linearGradient>
+  <radialGradient id="gl${u}"><stop offset="0" stop-color="#ffd27a" stop-opacity=".7"/><stop offset=".5" stop-color="#ff8a3a" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vg${u}" cx="50%" cy="45%" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient></defs>
+  <rect width="1600" height="900" fill="url(#sk${u})"/>${stars}
+  ${ridge(r,560,80,50,'#2a1e3e')}${ridge(r,650,40,60,'#1a1326')}
+  <rect y="700" width="1600" height="200" fill="#120d1a"/>
+  <g><circle cx="640" cy="640" r="320" fill="url(#gl${u})"/>
+   <path d="M360 770 L640 330 L920 770Z" fill="url(#tn${u})" stroke="#3a2a18" stroke-width="4"/>
+   <path d="M560 770 L640 470 L720 770Z" fill="#ffcf7a"/><path d="M560 770 L640 470 L600 770Z" fill="#8a6a3a" opacity=".85"/>
+   <path d="M640 330 V300" stroke="#3a2a18" stroke-width="6"/><path d="M640 300 l40 10 l-40 10z" fill="#a8382a"/>
+   <path d="M360 770 L250 800 M920 770 L1030 800 M500 550 L300 790 M780 550 L980 790" stroke="#2a1e12" stroke-width="2.5" opacity=".8"/></g>
+  <g transform="translate(1000 640)"><circle cx="190" cy="0" r="220" fill="url(#gl${u})"/>
+   <rect x="0" y="0" width="380" height="20" rx="3" fill="#6b4a2a" stroke="#2a1608" stroke-width="3"/>
+   <path d="M30 20 L120 140 M120 20 L30 140 M260 20 L350 140 M350 20 L260 140" stroke="#3a2614" stroke-width="8"/>
+   <rect x="40" y="-14" width="90" height="16" fill="#f2e6c8" transform="rotate(-4 85 -6)"/><rect x="150" y="-12" width="80" height="14" fill="#efe0bc" transform="rotate(3 190 -5)"/>
+   <rect x="290" y="-40" width="30" height="40" rx="4" fill="#ffd27a" stroke="#2a160a" stroke-width="4"/><circle cx="252" cy="-6" r="9" fill="#1a1a2a"/></g>
+  <g transform="translate(1440 790)"><circle cx="0" cy="-30" r="160" fill="url(#gl${u})"/><path d="M-50 10 L50 -10 M-50 -10 L50 10" stroke="#3a2210" stroke-width="14" stroke-linecap="round"/>
+   <path class="flame" d="M-26 0 C-30 -40 -6 -50 0 -90 C8 -50 32 -40 26 0Z" fill="#ff8a2a"/><path class="flame" d="M-12 0 C-14 -24 0 -32 2 -56 C8 -32 16 -22 12 0Z" fill="#ffe08a"/></g>
+  <g transform="translate(150 600)"><rect x="0" y="80" width="130" height="90" fill="#7a5a32" stroke="#2a1608" stroke-width="3"/><rect x="20" y="10" width="100" height="70" fill="#8a6a3a" stroke="#2a1608" stroke-width="3"/><text x="70" y="55" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="22" fill="#eadbb0" opacity=".8">弾薬</text></g>
+  <g transform="translate(1180 470)"><rect x="-6" y="0" width="12" height="230" fill="#3a2614"/><path d="M-90 20 H70 L90 45 L70 70 H-90Z" fill="#6b4a2a" stroke="#2a1608" stroke-width="3"/><text x="-10" y="56" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="28" fill="#f0d58d">中継地点</text></g>
+  <rect width="1600" height="900" fill="url(#vg${u})"/>
+  <style>.flame{transform-box:fill-box;transform-origin:50% 100%;animation:fl .5s ease-in-out infinite alternate}@keyframes fl{to{transform:scaleY(.86) scaleX(1.06)}}</style></svg>`}
+function frontOverlay(){const u='f'+(++UID);let bags='';for(let row=0;row<3;row++)for(let i=0;i<9;i++){const x=1020+i*68+(row%2)*34,y=860-row*34;bags+=`<rect x="${x}" y="${y}" width="70" height="36" rx="16" fill="${row%2?'#8a7a56':'#7a6a4a'}" stroke="#3a3020" stroke-width="2"/>`}
+ let stripes='';for(let i=0;i<10;i++)stripes+=`<path d="M${40+i*56} 400 h56 l0 60 q-28 16 -56 0z" fill="${i%2?'#efe2c0':'#a8382a'}"/>`;
+ return `<g><rect x="40" y="400" width="10" height="440" fill="#3a2614"/><rect x="590" y="400" width="10" height="440" fill="#3a2614"/>${stripes}
+  <path d="M20 400 H620" stroke="#3a2614" stroke-width="8"/><path d="M600 400 V250" stroke="#3a2614" stroke-width="6"/><path d="M600 250 h90 v60 h-90z" fill="#263463"/><circle cx="645" cy="280" r="18" fill="#c9a04f"/>
+  <g transform="translate(640 760)"><rect width="110" height="80" fill="#8a6236" stroke="#24130a" stroke-width="3"/><rect x="20" y="-60" width="90" height="60" fill="#7a5530" stroke="#24130a" stroke-width="3"/></g>${bags}
+  <rect y="880" width="1600" height="20" fill="#000" opacity=".5"/></g>`}
+
+/* ============ 登場人物 ============ */
+function mireiSVG(table){return `<svg viewBox="0 0 220 340">
+ <path d="M58 100 C50 40 84 16 110 16 C136 16 170 40 162 100 L170 214 C150 228 70 228 50 214Z" fill="#5e3219"/>
+ <path d="M38 340 C40 252 62 202 110 190 C158 202 180 252 182 340Z" fill="#263463"/>
+ <path d="M90 188 L110 236 L130 188 C122 183 98 183 90 188Z" fill="#f6f2ea"/>
+ <path d="M110 200 l-16 -9 v18z M110 200 l16 -9 v18z" fill="#b3262a"/><circle cx="110" cy="200" r="4.5" fill="#7a1418"/>
+ <circle cx="110" cy="256" r="3.5" fill="#d9b25a"/><circle cx="110" cy="280" r="3.5" fill="#d9b25a"/>
+ <rect x="138" y="226" width="26" height="10" rx="2" fill="#f2e6c8"/>
+ <path d="M100 158 h20 v34 h-20z" fill="#e9c2a4"/>
+ <ellipse cx="110" cy="112" rx="38" ry="44" fill="#f4d3b8"/>
+ <path d="M70 106 C62 60 88 40 110 40 C134 40 160 60 150 106 C142 84 130 74 120 74 C118 86 104 90 96 80 C88 90 80 98 70 106Z" fill="#6b3a1e"/>
+ <path d="M72 100 C64 132 66 164 76 184 L86 176 C78 152 78 126 80 104Z M148 100 C156 132 154 164 144 184 L134 176 C142 152 142 126 140 104Z" fill="#6b3a1e"/>
+ <path d="M134 62 l10 -6 l4 10z" fill="#d9b25a"/>
+ <path d="M87 101 q9 -5 18 0 M115 101 q9 -5 18 0" stroke="#5e3219" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+ <ellipse cx="96" cy="118" rx="6.5" ry="8.5" fill="#4a2a14"/><ellipse cx="124" cy="118" rx="6.5" ry="8.5" fill="#4a2a14"/>
+ <circle cx="98.5" cy="114.5" r="2.4" fill="#fff"/><circle cx="126.5" cy="114.5" r="2.4" fill="#fff"/>
+ <ellipse cx="86" cy="132" rx="8" ry="4" fill="#f08a8a" opacity=".35"/><ellipse cx="134" cy="132" rx="8" ry="4" fill="#f08a8a" opacity=".35"/>
+ <path d="M103 140 q7 6 14 0" stroke="#a0503a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+ <path d="M66 232 C60 272 80 296 112 296" stroke="#263463" stroke-width="22" stroke-linecap="round" fill="none"/>
+ <g transform="rotate(-8 150 270)"><rect x="122" y="232" width="58" height="76" rx="4" fill="#8a6236" stroke="#3a2210" stroke-width="2"/><rect x="128" y="242" width="46" height="60" fill="#f4ecd8"/><rect x="140" y="228" width="22" height="10" rx="2" fill="#aab0b8"/><path d="M134 256h34M134 266h34M134 276h26" stroke="#8a7a5a" stroke-width="2"/></g>
+ <circle cx="116" cy="294" r="10" fill="#f4d3b8"/>
+ ${table?`<rect x="-20" y="290" width="260" height="14" fill="#7a4f2c"/><rect x="-20" y="304" width="260" height="36" fill="#4a2a15"/><path d="M-20 304 H240" stroke="#24130a" stroke-width="2"/><rect x="10" y="252" width="56" height="40" fill="#8a6236" stroke="#3a2210" stroke-width="2"/><text x="38" y="279" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="16" fill="#eadbb0">補給</text>`:''}
+</svg>`}
+function leonSVG(vb){return `<svg viewBox="${vb||'0 0 220 340'}">
+ <path d="M164 210 L198 34" stroke="#3a3a3a" stroke-width="9" stroke-linecap="round"/><path d="M192 54 l12 4" stroke="#3a3a3a" stroke-width="6"/>
+ <path d="M34 340 C36 250 60 202 110 190 C160 202 184 250 186 340Z" fill="#4f5b3a"/>
+ <ellipse cx="62" cy="216" rx="24" ry="15" fill="#5d4428"/><ellipse cx="158" cy="216" rx="24" ry="15" fill="#5d4428"/>
+ <path d="M76 216 C92 206 128 206 144 216 L148 294 C130 304 90 304 72 294Z" fill="#6b4a2a" stroke="#3a2614" stroke-width="2"/>
+ <rect x="84" y="250" width="22" height="18" rx="3" fill="#4a3018"/><rect x="114" y="250" width="22" height="18" rx="3" fill="#4a3018"/>
+ <path d="M58 206 L162 336" stroke="#3a2614" stroke-width="12"/>
+ <path d="M100 160 h20 v34 h-20z" fill="#e2b896"/>
+ <path d="M80 178 C92 196 128 196 140 178 L146 198 C126 214 94 214 74 198Z" fill="#a8382a"/><path d="M134 198 l14 34 l-12 -2z" fill="#8f2a1e"/>
+ <ellipse cx="110" cy="118" rx="36" ry="42" fill="#ecc29e"/>
+ <path d="M74 112 C72 128 74 140 78 148 L82 120Z M146 112 C148 128 146 140 142 148 L138 120Z" fill="#2a221c"/>
+ <path d="M70 108 C66 58 88 40 110 40 C132 40 154 58 150 108 C140 98 80 98 70 108Z" fill="#5f6d44" stroke="#2a3018" stroke-width="2"/>
+ <path d="M64 108 C80 98 140 98 156 108 L156 115 C140 106 80 106 64 115Z" fill="#4c5836"/>
+ <path d="M74 82 C90 75 130 75 146 82" stroke="#3a2614" stroke-width="7" fill="none"/>
+ <circle cx="96" cy="78" r="9" fill="#9fd3e8" stroke="#3a2614" stroke-width="3"/><circle cx="124" cy="78" r="9" fill="#9fd3e8" stroke="#3a2614" stroke-width="3"/><path d="M92 74 l4 -3 M120 74 l4 -3" stroke="#fff" stroke-width="2"/>
+ <path d="M86 115 L104 118 M134 115 L116 118" stroke="#2a221c" stroke-width="3.2" stroke-linecap="round"/>
+ <ellipse cx="96" cy="126" rx="4.5" ry="5.5" fill="#2a1a10"/><ellipse cx="124" cy="126" rx="4.5" ry="5.5" fill="#2a1a10"/><circle cx="97.5" cy="124" r="1.5" fill="#fff"/><circle cx="125.5" cy="124" r="1.5" fill="#fff"/>
+ <path d="M110 128 l-3 10 h5" stroke="#b8865e" stroke-width="2" fill="none"/>
+ <path d="M101 148 H119" stroke="#8a4a3a" stroke-width="2.6" stroke-linecap="round"/>
+ <rect x="126" y="134" width="14" height="7" rx="2" fill="#f0d9b0" transform="rotate(20 133 137)"/>
+</svg>`}
+function hansSVG(){return `<svg viewBox="0 0 220 340">
+ <path d="M32 340 C34 252 60 204 110 192 C160 204 186 252 188 340Z" fill="#6b4a2e"/>
+ <path d="M84 196 L110 300 L136 196Z" fill="#8a6a3e"/><path d="M96 192 L110 220 L124 192Z" fill="#e8e0cc"/>
+ <circle cx="110" cy="246" r="3" fill="#2a1a0a"/><circle cx="110" cy="270" r="3" fill="#2a1a0a"/>
+ <rect x="56" y="250" width="30" height="24" rx="3" fill="#5a3c22"/><path d="M60 250 v-6 h22 v6" stroke="#c9a04f" stroke-width="2" fill="none"/>
+ <path d="M100 162 h20 v34 h-20z" fill="#d9ae8c"/>
+ <ellipse cx="110" cy="120" rx="35" ry="41" fill="#e4bc9a"/>
+ <path d="M75 110 C72 126 74 140 78 148 L84 118Z M145 110 C148 126 146 140 142 148 L136 118Z" fill="#b8b2a6"/>
+ <path d="M74 124 C76 158 92 168 110 168 C128 168 144 158 146 124 C136 140 84 140 74 124Z" fill="#c8c2b6"/>
+ <path d="M94 142 C100 136 108 138 110 142 C112 138 120 136 126 142 C120 148 100 148 94 142Z" fill="#a8a296"/>
+ <path d="M66 92 C70 62 150 62 154 92 L164 98 C130 104 90 104 58 98Z" fill="#4a3a2a"/><path d="M70 92 C76 70 144 70 150 92" fill="#5a4a36"/>
+ <circle cx="96" cy="118" r="10.5" fill="#d8eef7" opacity=".35" stroke="#2a2a2a" stroke-width="2.6"/><circle cx="124" cy="118" r="10.5" fill="#d8eef7" opacity=".35" stroke="#2a2a2a" stroke-width="2.6"/><path d="M106.5 118 h7" stroke="#2a2a2a" stroke-width="2.4"/>
+ <circle cx="96" cy="119" r="3" fill="#2a1a10"/><circle cx="124" cy="119" r="3" fill="#2a1a10"/>
+ <path d="M86 104 q10 -4 18 0 M116 104 q8 -4 18 0" stroke="#8a847a" stroke-width="3" fill="none" stroke-linecap="round"/>
+ <path d="M148 102 L162 76" stroke="#c9a04f" stroke-width="4" stroke-linecap="round"/>
+ <path d="M60 236 C52 276 70 300 104 304" stroke="#6b4a2e" stroke-width="22" stroke-linecap="round" fill="none"/>
+ <circle cx="108" cy="302" r="10" fill="#e4bc9a"/><rect x="112" y="290" width="22" height="16" rx="3" fill="#3a2614"/><rect x="108" y="304" width="30" height="8" fill="#8f1d1d"/>
+</svg>`}
+
+/* ============ 業務モードの背景 ============ */
+function hubSVG(){const r=seeded(99),u='h'+(++UID);
+ let boxes='';for(let i=0;i<14;i++){const x=40+i*115,w=60+r()*40,h=40+r()*35;boxes+=`<rect x="${x}" y="${600-h}" width="${w}" height="${h}" fill="#c89a5e" stroke="#6a4a22" stroke-width="2"/><path d="M${x} ${600-h+12} H${x+w}" stroke="#d9b26a" stroke-width="5"/><rect x="${x+w*.55}" y="${600-h+h*.45}" width="${w*.35}" height="${h*.3}" fill="#f4efe0"/>`}
+ let cages='';for(const x of [120,300,1220,1400]){cages+=`<g><rect x="${x}" y="520" width="150" height="220" fill="none" stroke="#8a929c" stroke-width="5"/>${[1,2,3,4].map(k=>`<path d="M${x} ${520+k*44} H${x+150}" stroke="#8a929c" stroke-width="2"/>`).join('')}${[1,2].map(k=>`<path d="M${x+k*50} 520 V740" stroke="#8a929c" stroke-width="2"/>`).join('')}<rect x="${x+12}" y="${600}" width="60" height="60" fill="#c89a5e" stroke="#6a4a22"/><rect x="${x+76}" y="${640}" width="56" height="50" fill="#b58a52" stroke="#6a4a22"/><circle cx="${x+15}" cy="750" r="10" fill="#333"/><circle cx="${x+135}" cy="750" r="10" fill="#333"/></g>`}
+ return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="w${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2433"/><stop offset="1" stop-color="#2c3446"/></linearGradient>
+  <radialGradient id="l${u}"><stop offset="0" stop-color="#e8f4ff" stop-opacity=".35"/><stop offset="1" stop-color="#e8f4ff" stop-opacity="0"/></radialGradient><radialGradient id="v${u}" cx="50%" cy="45%" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient></defs>
+  <rect width="1600" height="900" fill="url(#w${u})"/>${Array.from({length:9},(_,i)=>`<path d="M${i*200} 0 V500" stroke="#141a26" stroke-width="10"/>`).join('')}
+  <path d="M0 120 H1600" stroke="#141a26" stroke-width="14"/>${[300,800,1300].map(x=>`<rect x="${x-90}" y="130" width="180" height="12" fill="#f0f6ff"/><ellipse cx="${x}" cy="300" rx="320" ry="240" fill="url(#l${u})"/>`).join('')}
+  <rect x="580" y="160" width="440" height="70" rx="6" fill="#20406a" stroke="#c9d6e8" stroke-width="3"/><text x="800" y="208" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="36" fill="#eaf2ff" letter-spacing="8">${esc(TM().relay)}</text>
+  <rect x="0" y="600" width="1600" height="26" fill="#3a3f48"/><rect x="0" y="626" width="1600" height="16" fill="#23272e"/>${Array.from({length:40},(_,i)=>`<circle cx="${i*40+20}" cy="634" r="6" fill="#59606b"/>`).join('')}
+  ${boxes}<rect y="760" width="1600" height="140" fill="#1a1e26"/><path d="M0 760 H1600" stroke="#e0b030" stroke-width="6" stroke-dasharray="40 30"/>${cages}
+  <rect width="1600" height="900" fill="url(#v${u})"/></svg>`}
+function shopSVG(){const u='s'+(++UID),r=seeded(5);
+ let goods='';for(let row=0;row<3;row++)for(let i=0;i<9;i++){const x=470+i*76,y=330+row*110;const c=['#5a9be0','#e0864a','#7fbf6a','#e0c04a','#c86a8a','#f2f2f2'][Math.floor(r()*6)];goods+=`<rect x="${x}" y="${y-48}" width="60" height="48" rx="3" fill="${c}" opacity="${r()<.25?0:.9}"/>`}
+ return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="k${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3ea"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient><radialGradient id="v${u}" cx="50%" cy="45%" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>
+  <rect width="1600" height="900" fill="url(#k${u})"/><rect x="0" y="560" width="1600" height="340" fill="#b9b2a4"/>
+  <rect x="340" y="140" width="920" height="560" fill="#f2ead8" stroke="#6a5a40" stroke-width="4"/>
+  ${Array.from({length:12},(_,i)=>`<path d="M${340+i*77} 140 h77 v70 q-38 26 -77 0z" fill="${i%2?'#f6f1e4':'#2f7a5a'}"/>`).join('')}
+  <rect x="560" y="60" width="480" height="70" rx="8" fill="#2f7a5a" stroke="#1d4a36" stroke-width="4"/><text x="800" y="108" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="36" fill="#fff" letter-spacing="6">${esc(curStage?(G&&G.stageIdx!=null?curStage().dest:'店舗'):'店舗')}</text>
+  <rect x="440" y="250" width="720" height="380" fill="#dcd2bc" stroke="#6a5a40" stroke-width="3"/>${[330,440,550].map(y=>`<rect x="450" y="${y}" width="700" height="10" fill="#8a7a5a"/>`).join('')}${goods}
+  <rect x="440" y="250" width="720" height="380" fill="#bfe0f5" opacity=".18"/><path d="M800 250 V630" stroke="#6a5a40" stroke-width="5"/>
+  <rect x="1300" y="420" width="120" height="180" rx="6" fill="#d94a3a"/><text x="1360" y="520" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="30" fill="#fff">特売</text>
+  <rect width="1600" height="900" fill="url(#v${u})"/></svg>`}
+function streetSVG(){const u='t'+(++UID),r=seeded(31);
+ let houses='';for(let i=0;i<6;i++){const x=i*280-20,w=220,h=170+r()*60,c=['#e8d8b8','#d8c0a0','#c8d8e0','#e0c8c0'][i%4];houses+=`<g><rect x="${x}" y="${640-h}" width="${w}" height="${h}" fill="${c}" stroke="#5a4a3a" stroke-width="3"/><path d="M${x-14} ${640-h} L${x+w/2} ${640-h-90} L${x+w+14} ${640-h}Z" fill="${['#8a3a2a','#3a4a6a','#4a6a3a'][i%3]}"/><rect x="${x+30}" y="${640-h+30}" width="50" height="44" fill="#ffe6a8" stroke="#5a4a3a" stroke-width="2"/><rect x="${x+140}" y="${640-90}" width="50" height="90" fill="#7a5a3a"/><rect x="${x+90}" y="${640-60}" width="34" height="26" fill="#c9302a"/></g>`}
+ return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="k${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2a65a"/><stop offset=".5" stop-color="#f6cf8a"/><stop offset="1" stop-color="#fae6c0"/></linearGradient><radialGradient id="v${u}" cx="50%" cy="45%" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient></defs>
+  <rect width="1600" height="900" fill="url(#k${u})"/><circle cx="1300" cy="230" r="70" fill="#fff4d0" opacity=".9"/>${ridge(r,470,40,60,'#c99a6a',.6)}
+  ${houses}<rect y="640" width="1600" height="260" fill="#6a6a70"/><path d="M0 760 H1600" stroke="#f0f0f0" stroke-width="8" stroke-dasharray="60 40"/><rect y="640" width="1600" height="20" fill="#9a9aa0"/>
+  <g transform="translate(980 600)"><rect x="0" y="40" width="300" height="140" rx="10" fill="#f4f4f0" stroke="#3a3a3a" stroke-width="3"/><rect x="300" y="80" width="110" height="100" rx="10" fill="#2f7a5a" stroke="#1d4a36" stroke-width="3"/><rect x="320" y="94" width="70" height="40" fill="#bfe0f5"/><circle cx="70" cy="186" r="26" fill="#2a2a2a"/><circle cx="340" cy="186" r="26" fill="#2a2a2a"/><text x="150" y="124" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="34" fill="#2f7a5a">宅配</text></g>
+  <rect width="1600" height="900" fill="url(#v${u})"/></svg>`}
+function eventSVG(k){const u='e'+(++UID);
+ const base=(inner,glow)=>`<svg viewBox="0 0 300 300"><defs><radialGradient id="g${u}"><stop offset="0" stop-color="${glow}" stop-opacity=".55"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient></defs><circle cx="150" cy="150" r="145" fill="url(#g${u})"/>${inner}</svg>`;
+ const E={
+  typhoon:base(`<path d="M150 60 C210 60 240 110 220 150 C200 190 140 180 150 140 C160 110 200 120 195 145" fill="none" stroke="#e8f2ff" stroke-width="16" stroke-linecap="round"/><path d="M150 240 C90 240 60 190 80 150 C100 110 160 120 150 160" fill="none" stroke="#9fc8f0" stroke-width="16" stroke-linecap="round"/>${[0,1,2,3,4].map(i=>`<path d="M${70+i*40} 250 l-10 26" stroke="#9fc8f0" stroke-width="6" stroke-linecap="round"/>`).join('')}`,'#7fb0e0'),
+  spring:base(`${[0,72,144,216,288].map(a=>`<ellipse cx="150" cy="95" rx="32" ry="52" fill="#ffc6d8" stroke="#e48aa8" stroke-width="3" transform="rotate(${a} 150 150)"/>`).join('')}<circle cx="150" cy="150" r="24" fill="#ffe08a"/>`,'#ffb0c8'),
+  rain:base(`<path d="M60 140 C60 60 240 60 240 140Z" fill="#5a9be0" stroke="#2a5a90" stroke-width="4"/><path d="M150 140 V240 C150 262 120 262 120 240" fill="none" stroke="#3a3a3a" stroke-width="8" stroke-linecap="round"/>${[[70,180],[230,190],[90,250],[210,250]].map(([x,y])=>`<path d="M${x} ${y} q-8 14 0 22 q8 -8 0 -22z" fill="#9fd3ff"/>`).join('')}`,'#7fb0e0'),
+  cold:base(`${[0,60,120].map(a=>`<path d="M150 50 V250 M150 80 l-20 -20 M150 80 l20 -20 M150 220 l-20 20 M150 220 l20 20" stroke="#e8f6ff" stroke-width="10" stroke-linecap="round" fill="none" transform="rotate(${a} 150 150)"/>`).join('')}`,'#9fd8ff'),
+  yearend:base(`<rect x="70" y="120" width="160" height="120" rx="8" fill="#c8302a"/><rect x="60" y="100" width="180" height="34" rx="6" fill="#e0483a"/><rect x="138" y="100" width="24" height="140" fill="#f0d070"/><path d="M150 100 C120 60 90 70 110 98 M150 100 C180 60 210 70 190 98" stroke="#f0d070" stroke-width="10" fill="none"/>`,'#ffb070'),
+  gift:base(`<rect x="70" y="120" width="160" height="120" rx="8" fill="#f4ecd8" stroke="#8a6a3a" stroke-width="4"/><rect x="60" y="100" width="180" height="34" rx="6" fill="#e9dcc0" stroke="#8a6a3a" stroke-width="4"/><rect x="138" y="100" width="24" height="140" fill="#c8302a"/><text x="150" y="215" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="34" fill="#5a9be0">冷凍</text>`,'#a8d8ff'),
+  moving:base(`<rect x="50" y="130" width="120" height="110" fill="#c89a5e" stroke="#6a4a22" stroke-width="4"/><rect x="130" y="80" width="120" height="100" fill="#d8aa6e" stroke="#6a4a22" stroke-width="4"/><path d="M50 160 H170 M130 110 H250" stroke="#e8d0a0" stroke-width="10"/>`,'#ffd08a'),
+  farm:base(`<ellipse cx="120" cy="170" rx="60" ry="40" fill="#5a2a8a"/><path d="M120 130 l-10 -24 l20 10z" fill="#3a8a3a"/><circle cx="195" cy="175" r="40" fill="#e04a3a"/><path d="M195 135 l-6 -16 l14 6z" fill="#3a8a3a"/><path d="M60 240 C100 200 160 260 240 220" stroke="#3a8a3a" stroke-width="12" fill="none"/>`,'#a8f0a0'),
+  sale:base(`<path d="M80 90 H200 L250 150 L200 210 H80Z" fill="#e0c04a" stroke="#8a6a1a" stroke-width="4"/><circle cx="110" cy="150" r="12" fill="#fff"/><text x="185" y="166" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="40" fill="#c8302a">SALE</text>`,'#ffe08a'),
+ };return E[k]||E.gift}
+function svcIcon(no){const it=cat(no)||{name:'?'};const c=SC.key==='delivery'?'#c89a5e':'#5a9be0';const t=it.name.replace(/[（(].*$/,'').slice(0,2);
+ return `<svg viewBox="0 0 32 32"><rect x="4" y="8" width="24" height="20" rx="2" fill="${c}" stroke="#2a1a0a"/><path d="M4 13 H28" stroke="#2a1a0a" opacity=".5"/><text x="16" y="25" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="9" fill="#fff">${esc(t)}</text></svg>`}
+function kentaSVG(){return `<svg viewBox="0 0 220 340">
+ <path d="M36 340 C38 252 62 204 110 192 C158 204 182 252 184 340Z" fill="#2f7a5a"/>
+ <path d="M36 300 H184" stroke="#f0d070" stroke-width="10"/><path d="M92 192 L110 222 L128 192Z" fill="#f4f4f0"/>
+ <rect x="128" y="226" width="34" height="14" rx="2" fill="#f4f4f0"/><text x="145" y="237" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#2f7a5a" font-weight="700">ケンタ</text>
+ <path d="M100 160 h20 v34 h-20z" fill="#e8bd98"/>
+ <ellipse cx="110" cy="118" rx="36" ry="42" fill="#f0c8a4"/>
+ <path d="M74 110 C72 128 74 140 78 148 L84 116Z M146 110 C148 128 146 140 142 148 L136 116Z" fill="#3a2a1a"/>
+ <path d="M70 100 C70 58 90 44 110 44 C130 44 150 58 150 100 Z" fill="#2f7a5a"/><path d="M110 100 C140 98 170 102 178 110 C160 112 130 110 110 108Z" fill="#245c44"/><circle cx="110" cy="70" r="9" fill="#f0d070"/>
+ <path d="M86 112 q9 -4 18 0 M116 112 q9 -4 18 0" stroke="#3a2a1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+ <ellipse cx="96" cy="124" rx="5" ry="6.5" fill="#2a1a10"/><ellipse cx="124" cy="124" rx="5" ry="6.5" fill="#2a1a10"/><circle cx="97.5" cy="121.5" r="1.8" fill="#fff"/><circle cx="125.5" cy="121.5" r="1.8" fill="#fff"/>
+ <path d="M100 144 q10 8 20 0" stroke="#8a4a3a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+ <path d="M64 236 C58 270 70 290 92 292 M156 236 C162 270 150 290 128 292" stroke="#2f7a5a" stroke-width="22" stroke-linecap="round" fill="none"/>
+ <rect x="70" y="254" width="80" height="62" fill="#c89a5e" stroke="#6a4a22" stroke-width="3"/><path d="M70 270 H150" stroke="#e8d0a0" stroke-width="8"/><rect x="100" y="282" width="40" height="22" fill="#f4efe0"/>
+ <circle cx="80" cy="292" r="10" fill="#f0c8a4"/><circle cx="140" cy="292" r="10" fill="#f0c8a4"/>
+</svg>`}
+
+/* ============ BGM・効果音（Web Audioでその場で演奏） ============ */
+const Music=(()=>{
+ const P=store.get('ikai_audio',{bgm:true,se:true});
+ const errs=[];let ctx=null,bgm,sfx,noise,want=null,curName=null,timer=null,nextT=0,stepN=0,tg=null;
+ const mtof=n=>440*Math.pow(2,(n-69)/12);
+ const C=(r,q)=>q==='m'?[r,r+3,r+7]:q==='d'?[r,r+3,r+6]:q==='7'?[r,r+4,r+7,r+10]:[r,r+4,r+7];
+ function init(){if(ctx)return true;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;try{ctx=new AC()}catch(e){return false}
+  const comp=ctx.createDynamicsCompressor();comp.connect(ctx.destination);
+  bgm=ctx.createGain();bgm.gain.value=P.bgm?.3:0;bgm.connect(comp);sfx=ctx.createGain();sfx.gain.value=P.se?.55:0;sfx.connect(comp);
+  noise=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return true}
+ function unlock(){if(!init())return;if(ctx.state==='suspended')ctx.resume().catch(()=>{});if(P.bgm&&want&&want!==curName)start(want)}
+ /* 楽器 */
+ function pluck(t,n,d,v,o){const g=ctx.createGain(),f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(3000,t);f.frequency.exponentialRampToValueAtTime(500,t+.5);f.connect(g);g.connect(o);
+  const a=ctx.createOscillator();a.type='triangle';a.frequency.value=mtof(n);a.connect(f);const b=ctx.createOscillator(),bg=ctx.createGain();b.type='sawtooth';b.frequency.value=mtof(n);bg.gain.value=.25;b.connect(bg);bg.connect(f);
+  const end=t+Math.max(.35,d*1.3)+.3;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.001,end);[a,b].forEach(x=>{x.start(t);x.stop(end+.05)})}
+ function flute(t,n,d,v,o){const g=ctx.createGain();g.connect(o);const a=ctx.createOscillator();a.type='sine';a.frequency.value=mtof(n);const l=ctx.createOscillator(),lg=ctx.createGain();l.frequency.value=5.2;lg.gain.value=mtof(n)*.006;l.connect(lg);lg.connect(a.frequency);a.connect(g);
+  const b=ctx.createOscillator(),bg=ctx.createGain();b.type='triangle';b.frequency.value=mtof(n)*2;bg.gain.value=.1;b.connect(bg);bg.connect(g);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.06);g.gain.setValueAtTime(v,t+Math.max(.07,d-.05));g.gain.linearRampToValueAtTime(0,t+d+.15);[a,b,l].forEach(x=>{x.start(t);x.stop(t+d+.3)})}
+ function brass(t,n,d,v,o){const f=ctx.createBiquadFilter();f.type='lowpass';f.Q.value=2;f.frequency.setValueAtTime(400,t);f.frequency.linearRampToValueAtTime(2400,t+.06);f.frequency.setTargetAtTime(1100,t+.06,.2);const g=ctx.createGain();f.connect(g);g.connect(o);
+  [-6,6].forEach(dt=>{const a=ctx.createOscillator();a.type='sawtooth';a.frequency.value=mtof(n);a.detune.value=dt;a.connect(f);a.start(t);a.stop(t+d+.3)});
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.04);g.gain.setValueAtTime(v*.8,t+Math.max(.05,d-.04));g.gain.linearRampToValueAtTime(0,t+d+.12)}
+ function pad(t,ns,d,v,o,cut){const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=cut||900;const g=ctx.createGain();f.connect(g);g.connect(o);
+  ns.forEach(n=>[-8,8].forEach(dt=>{const a=ctx.createOscillator();a.type='sawtooth';a.frequency.value=mtof(n);a.detune.value=dt;a.connect(f);a.start(t);a.stop(t+d+1)}));
+  const pv=v/ns.length;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pv,t+Math.min(.5,d*.3));g.gain.setValueAtTime(pv,t+d*.85);g.gain.linearRampToValueAtTime(0,t+d+.5)}
+ function organ(t,ns,d,v,o){const g=ctx.createGain();g.connect(o);ns.forEach(n=>[[0,1],[12,.5],[19,.25]].forEach(([dt,a])=>{const x=ctx.createOscillator(),xg=ctx.createGain();x.type='sine';x.frequency.value=mtof(n+dt);xg.gain.value=a;x.connect(xg);xg.connect(g);x.start(t);x.stop(t+d+.6)}));
+  const pv=v/ns.length;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pv,t+.08);g.gain.setValueAtTime(pv,t+d);g.gain.linearRampToValueAtTime(0,t+d+.4)}
+ function bass(t,n,d,v,o){const g=ctx.createGain();g.connect(o);const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=700;f.connect(g);const a=ctx.createOscillator();a.type='triangle';a.frequency.value=mtof(n);a.connect(f);const s=ctx.createOscillator();s.type='sine';s.frequency.value=mtof(n);s.connect(g);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.setTargetAtTime(v*.6,t+.01,.1);g.gain.setTargetAtTime(0,t+d,.05);[a,s].forEach(x=>{x.start(t);x.stop(t+d+.4)})}
+ function bell(t,n,d,v,o){const g=ctx.createGain();g.connect(o);[[1,1],[2.76,.35],[5.4,.12]].forEach(([m,a])=>{const x=ctx.createOscillator(),xg=ctx.createGain();x.type='sine';x.frequency.value=mtof(n)*m;xg.gain.value=a;x.connect(xg);xg.connect(g);x.start(t);x.stop(t+d+1.6)});
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+d+1.5)}
+ function kick(t,v,o){const a=ctx.createOscillator(),g=ctx.createGain();a.frequency.setValueAtTime(150,t);a.frequency.exponentialRampToValueAtTime(40,t+.15);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);a.connect(g);g.connect(o);a.start(t);a.stop(t+.35)}
+ function nz(t,dur,v,type,freq,o,q){const s=ctx.createBufferSource();s.buffer=noise;const f=ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;if(q)f.Q.value=q;const g=ctx.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f);f.connect(g);g.connect(o);s.start(t,Math.random()*.5);s.stop(t+dur+.05)}
+ function snare(t,v,o){nz(t,.18,v,'bandpass',1800,o,.8);const a=ctx.createOscillator(),g=ctx.createGain();a.type='triangle';a.frequency.value=190;g.gain.setValueAtTime(v*.5,t);g.gain.exponentialRampToValueAtTime(.001,t+.1);a.connect(g);g.connect(o);a.start(t);a.stop(t+.12)}
+ const hat=(t,v,o)=>nz(t,.05,v,'highpass',7000,o);
+ const clap=(t,v,o)=>{nz(t,.12,v,'bandpass',1200,o,1.5);nz(t+.012,.1,v*.7,'bandpass',1300,o,1.5)};
+ function timp(t,n,v,o){const a=ctx.createOscillator(),g=ctx.createGain();a.type='sine';a.frequency.setValueAtTime(mtof(n)*1.05,t);a.frequency.exponentialRampToValueAtTime(mtof(n),t+.08);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+1.1);a.connect(g);g.connect(o);a.start(t);a.stop(t+1.2);nz(t,.06,v*.3,'lowpass',400,o)}
+ const mel=(T,b,s,t,sp,o,inst,v)=>(T.mel[b]||[]).forEach(m=>{if(m[0]===s&&m[1])inst(t,m[1],m[2]*sp,v,o)});
+ /* 曲（すべてオリジナル） */
+ const TR={
+  title:{bpm:72,spb:2,bpb:4,chords:[C(62,'m'),C(58),C(65),C(60),C(62,'m'),C(58),C(55,'m'),C(57)],
+   mel:[[[0,74,3],[3,76,1],[4,77,4]],[[0,74,2],[2,72,2],[4,70,4]],[[0,72,3],[3,74,1],[4,77,2],[6,76,2]],[[0,76,6],[6,72,2]],[[0,81,3],[3,79,1],[4,77,4]],[[0,79,2],[2,77,2],[4,74,4]],[[0,74,2],[2,77,2],[4,76,2],[6,74,2]],[[0,73,6]]],
+   play(b,s,t,ch,sp,o,T){if(s===0){pad(t,ch.map(n=>n-12),sp*8,.2,o,750);bass(t,ch[0]-24,sp*7,.22,o)}const ar=[ch[0],ch[1],ch[2],ch[0]+12,ch[1]+12,ch[2]+12,ch[0]+12,ch[2]];pluck(t,ar[s],sp,.07,o);mel(T,b,s,t,sp,o,flute,.16)}},
+  depot:{bpm:96,spb:4,bpb:4,chords:[C(60),C(57,'m'),C(65),C(67),C(60),C(64,'m'),C(65),C(67)],
+   mel:[[[0,72,4],[4,76,4],[8,79,6],[14,77,2]],[[0,76,4],[4,72,4],[8,69,8]],[[0,72,4],[4,74,2],[6,76,2],[8,77,8]],[[0,79,6],[6,77,2],[8,74,8]],[[0,72,4],[4,76,4],[8,79,4],[12,84,4]],[[0,83,4],[4,79,4],[8,76,8]],[[0,77,4],[4,76,4],[8,74,4],[12,72,4]],[[0,74,8],[8,71,4],[12,67,4]]],
+   play(b,s,t,ch,sp,o,T){if(s%8===0)bass(t,ch[0]-24,sp*6,.22,o);if(s%2===0){const ar=[ch[0]-12,ch[2]-12,ch[1],ch[2]-12,ch[0],ch[2]-12,ch[1],ch[2]-12];pluck(t,ar[s/2],sp*2,.06,o)}if(s%4===2)hat(t,.03,o);mel(T,b,s,t,sp,o,pluck,.11)}},
+  relay:{bpm:70,spb:3,bpb:2,chords:[C(57,'m'),C(55),C(53),C(52),C(57,'m'),C(55),C(53),C(52)],
+   mel:[[[0,76,3],[3,74,1],[4,72,2]],[[0,71,3],[3,72,1],[4,74,2]],[[0,72,3],[3,69,3]],[[0,68,6]],[[0,76,2],[2,77,1],[3,79,3]],[[0,77,2],[2,76,1],[3,74,3]],[[0,72,2],[2,74,1],[3,72,1],[4,69,2]],[[0,71,3],[3,68,3]]],
+   play(b,s,t,ch,sp,o,T){if(s%3===0)bass(t,ch[0]-24,sp*2.5,.2,o);const ar=[ch[0]-12,ch[1]-12,ch[2]-12,ch[0],ch[2]-12,ch[1]-12];pluck(t,ar[s],sp*1.5,.07,o);mel(T,b,s,t,sp,o,flute,.15)}},
+  front:{bpm:112,spb:4,bpb:4,chords:[C(55),C(60),C(62),C(55),C(64,'m'),C(60),C(62),C(62,'7')],
+   mel:[[[0,67,3],[3,67,1],[4,71,4],[8,74,6],[14,71,2]],[[0,72,4],[4,76,4],[8,74,8]],[[0,74,3],[3,72,1],[4,71,4],[8,69,8]],[[0,67,4],[4,71,4],[8,74,8]],[[0,76,3],[3,76,1],[4,79,4],[8,76,6],[14,74,2]],[[0,72,4],[4,74,4],[8,76,8]],[[0,78,4],[4,76,4],[8,74,4],[12,72,4]],[[0,74,8],[8,66,4],[12,69,4]]],
+   play(b,s,t,ch,sp,o,T){if(s===0)pad(t,ch,sp*16,.12,o,1000);if(s%4===0)bass(t,(s%8===0?ch[0]:ch[2])-24,sp*3,.22,o);if(s===0||s===8)kick(t,.4,o);if(s===4||s===12)snare(t,.22,o);if(b%2===1&&(s===14||s===15))snare(t,.12,o);mel(T,b,s,t,sp,o,brass,.13)}},
+  tension:{bpm:80,spb:4,bpb:4,chords:[C(57,'m'),C(57,'m'),C(53),C(52)],mel:[[[0,81,4]],[[8,84,4]],[[0,79,4]],[[8,80,6]]],
+   play(b,s,t,ch,sp,o,T){if(s===0)pad(t,[45,52,ch[1]-12],sp*16,.22,o,500);if(s===0||s===3)kick(t,s?.25:.4,o);mel(T,b,s,t,sp,o,bell,.06)}},
+  battle:{bpm:150,spb:4,bpb:4,chords:[C(64,'m'),C(60),C(62),C(59),C(64,'m'),C(60),C(57,'m'),C(59)],
+   mel:[[[0,76,2],[2,79,2],[4,83,4],[8,81,2],[10,79,2],[12,78,4]],[[0,76,4],[4,79,2],[6,76,2],[8,72,8]],[[0,74,2],[2,78,2],[4,81,4],[8,79,2],[10,78,2],[12,74,4]],[[0,75,8],[8,78,4],[12,71,4]],[[0,83,2],[2,81,2],[4,79,2],[6,78,2],[8,76,4],[12,79,4]],[[0,84,4],[4,83,2],[6,79,2],[8,76,8]],[[0,81,4],[4,79,2],[6,77,2],[8,76,4],[12,72,4]],[[0,75,4],[4,78,4],[8,81,4],[12,83,4]]],
+   play(b,s,t,ch,sp,o,T){if(s%2===0)bass(t,ch[0]-24+(s%4===2?12:0),sp*1.6,.2,o);if(s===0||s===6||s===8)kick(t,.5,o);if(s===4||s===12)snare(t,.25,o);if(s%2===0)hat(t,.05,o);if(s===0||s===8)pad(t,ch,sp*3,.1,o,1400);mel(T,b,s,t,sp,o,brass,.12)}},
+  boss:{bpm:132,spb:4,bpb:4,chords:[C(60,'m'),C(56),C(58),C(55),C(60,'m'),C(56),C(53,'m'),C(55)],
+   mel:[[[0,72,4],[4,75,4],[8,79,6],[14,78,2]],[[0,80,8],[8,79,4],[12,75,4]],[[0,74,4],[4,77,4],[8,82,8]],[[0,83,8],[8,79,4],[12,74,4]],[[0,84,4],[4,82,2],[6,80,2],[8,79,8]],[[0,77,4],[4,75,4],[8,72,8]],[[0,77,4],[4,80,4],[8,84,4],[12,83,4]],[[0,79,16]]],
+   play(b,s,t,ch,sp,o,T){if(s===0)organ(t,ch.map(n=>n-12),sp*16,.18,o);if(s===0||s===8)timp(t,ch[0]-24,.45,o);if((b===3||b===7)&&(s===12||s===14||s===15))timp(t,ch[0]-24,.3,o);if(s%2===0)bass(t,ch[0]-24,sp*1.5,.17,o);if(s===8)snare(t,.25,o);if(s%4===0)kick(t,.35,o);mel(T,b,s,t,sp,o,brass,.12)}},
+  shop:{bpm:118,spb:4,bpb:4,chords:[C(65),C(62,'m'),C(58),C(60),C(65),C(57,'m'),C(58),C(60)],
+   mel:[[[0,77,2],[2,81,2],[4,84,4],[8,81,2],[10,79,2],[12,77,4]],[[0,74,4],[4,77,4],[8,81,8]],[[0,82,2],[2,81,2],[4,79,4],[8,77,4],[12,74,4]],[[0,76,4],[4,79,4],[8,72,8]],[[0,77,2],[2,81,2],[4,84,4],[8,86,4],[12,84,4]],[[0,81,4],[4,76,4],[8,72,8]],[[0,74,2],[2,77,2],[4,82,4],[8,81,4],[12,79,4]],[[0,77,8]]],
+   play(b,s,t,ch,sp,o,T){if(s===0)bass(t,ch[0]-24,sp*3,.22,o);if(s===6||s===12)bass(t,ch[2]-24,sp*2,.18,o);if(s===8)bass(t,ch[0]-12,sp*2,.18,o);if(s%4===2)ch.forEach(n=>pluck(t,n,sp,.035,o));if(s===4||s===12)clap(t,.18,o);if(s%2===0)hat(t,.03,o);if(s===0||s===10)kick(t,.3,o);mel(T,b,s,t,sp,o,bell,.07)}},
+  street:{bpm:100,spb:4,bpb:4,chords:[C(58),C(55,'m'),C(63),C(65),C(58),C(62,'m'),C(63),C(65)],
+   mel:[[[0,74,4],[4,77,4],[8,82,6],[14,81,2]],[[0,79,8],[8,74,8]],[[0,75,4],[4,79,4],[8,82,4],[12,79,4]],[[0,77,12]],[[0,82,4],[4,81,4],[8,79,4],[12,77,4]],[[0,74,8],[8,77,8]],[[0,79,4],[4,77,4],[8,75,4],[12,74,4]],[[0,72,8]]],
+   play(b,s,t,ch,sp,o,T){if(s===0||s===8)bass(t,ch[0]-24,sp*5,.2,o);if(s===14)bass(t,ch[2]-24,sp*2,.15,o);if(s===0||s===6||s===10)ch.forEach(n=>pluck(t,n,sp*3,.035,o));if(s%2===0)hat(t,.025,o);if(s===0||s===10)kick(t,.28,o);if(s===8)snare(t,.12,o);mel(T,b,s,t,sp,o,flute,.13)}},
+  hub:{bpm:124,spb:4,bpb:4,chords:[C(62,'m'),C(58),C(60),C(57,'m')],mel:[[[0,74,4],[8,77,4]],[[0,74,4],[8,70,4]],[[0,72,4],[8,76,4]],[[0,69,8]]],
+   play(b,s,t,ch,sp,o,T){if(s%2===0)bass(t,ch[0]-24,sp*1.2,.17,o);pluck(t,[ch[0],ch[1],ch[2],ch[1]][s%4],sp,.03,o);if(s===0||s===8)kick(t,.3,o);if(s===12)clap(t,.14,o);if(s%2===1)hat(t,.03,o);mel(T,b,s,t,sp,o,bell,.07)}},
+ };
+ function start(name){stop();const T=TR[name];if(!T||!ctx){curName=null;return}curName=name;tg=ctx.createGain();tg.connect(bgm);tg.gain.setValueAtTime(0,ctx.currentTime);tg.gain.linearRampToValueAtTime(1,ctx.currentTime+1.2);
+  stepN=0;nextT=ctx.currentTime+.08;const sp=60/T.bpm/T.spb,per=T.spb*T.bpb,g=tg;
+  timer=setInterval(()=>{if(ctx.state!=='running')return;if(nextT<ctx.currentTime)nextT=ctx.currentTime+.05;while(nextT<ctx.currentTime+.15){const bar=Math.floor(stepN/per)%T.chords.length,s=stepN%per;try{T.play(bar,s,nextT,T.chords[bar],sp,g,T)}catch(e){errs.push(name+':'+e.message)}nextT+=sp;stepN++}},30)}
+ function stop(){clearInterval(timer);timer=null;if(tg&&ctx){const g=tg;g.gain.cancelScheduledValues(ctx.currentTime);g.gain.setValueAtTime(g.gain.value,ctx.currentTime);g.gain.linearRampToValueAtTime(0,ctx.currentTime+.6);setTimeout(()=>{try{g.disconnect()}catch(e){}},1500)}tg=null}
+ function play(name){if(!name)return;want=name;if(!ctx||!P.bgm||name===curName)return;start(name)}
+ function jingle(ok){if(!ctx||!P.bgm||ctx.state!=='running')return;stop();curName='__j';const t=ctx.currentTime+.1,g=ctx.createGain();g.connect(bgm);
+  if(ok){[[0,72],[.12,76],[.24,79],[.36,84]].forEach(([d,n])=>brass(t+d,n,.14,.26,g));[84,79,76].forEach(n=>brass(t+.5,n,1,.2,g));timp(t+.5,48,.5,g)}
+  else{[[0,67],[.32,66],[.64,65],[.96,64]].forEach(([d,n])=>flute(t+d,n,.34,.24,g));pad(t+1.25,[52,55,59],1.6,.2,g,600)}}
+ function se(k){if(!ctx||!P.se||ctx.state!=='running')return;const t=ctx.currentTime+.01,o=sfx;
+  if(k==='select')pluck(t,84,.06,.1,o);else if(k==='blip')pluck(t,91,.02,.035,o);
+  else if(k==='quill'){for(let i=0;i<14;i++)nz(t+i*.1+Math.random()*.03,.05,.1,'bandpass',2500+Math.random()*2500,o,4)}
+  else if(k==='seal'){kick(t,.9,o);nz(t,.25,.3,'lowpass',500,o)}else if(k==='stamp'){kick(t,.5,o);nz(t,.08,.25,'bandpass',900,o,1)}
+  else if(k==='whoosh'){const s=ctx.createBufferSource();s.buffer=noise;const f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=1;f.frequency.setValueAtTime(300,t);f.frequency.exponentialRampToValueAtTime(4000,t+.6);const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.3,t+.3);g.gain.linearRampToValueAtTime(0,t+.8);s.connect(f);f.connect(g);g.connect(o);s.start(t);s.stop(t+.85)}
+  else if(k==='hit'){nz(t,.12,.45,'bandpass',1500,o,1);kick(t,.35,o)}else if(k==='boom'){kick(t,1,o);nz(t,.7,.55,'lowpass',900,o)}
+  else if(k==='hurt'){nz(t,.15,.35,'lowpass',600,o);pluck(t,52,.1,.18,o)}else if(k==='heal')[0,4,7,12].forEach((d,i)=>bell(t+i*.07,79+d,.3,.13,o))}
+ function trackFor(id,scene){try{
+  if(['s-title','s-setup','s-prologue','s-end'].includes(id))return'title';
+  if(id==='s-battle')return SC.kind==='battle'?(curStage().enemy==='maou'?'boss':'battle'):(SC.key==='delivery'?'street':'shop');
+  const sc=scene||'';if(sc.endsWith(':front'))return'front';if(['depot','relay','hub','shop','street'].includes(sc))return sc;
+  if(SC.kind==='battle'&&(id==='s-vn'||id==='s-brief'))return'tension';return null}catch(e){return null}}
+ function screen(id,scene){const n=trackFor(id,scene);if(n)play(n)}
+ function set(kind,val){P[kind]=val;store.set('ikai_audio',P);if(!ctx){if(val)unlock();renderCtl();return}
+  if(kind==='bgm'){bgm.gain.setTargetAtTime(val?.3:0,ctx.currentTime,.1);if(val){const w=want;curName=null;if(w)start(w)}else{stop();curName=null}}else sfx.gain.setTargetAtTime(val?.55:0,ctx.currentTime,.05);renderCtl()}
+ function renderCtl(){const a=$('#aBgm'),b=$('#aSe');if(!a)return;a.textContent=`♪ BGM ${P.bgm?'オン':'オフ'}`;a.classList.toggle('off',!P.bgm);a.setAttribute('aria-pressed',P.bgm);b.textContent=`効果音 ${P.se?'オン':'オフ'}`;b.classList.toggle('off',!P.se);b.setAttribute('aria-pressed',P.se)}
+ document.addEventListener('pointerdown',unlock,true);document.addEventListener('keydown',unlock,true);
+ document.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('#audioCtl'))se('select')},true);
+ document.addEventListener('visibilitychange',()=>{if(!ctx)return;if(document.hidden)ctx.suspend().catch(()=>{});else ctx.resume().catch(()=>{})});
+ return{play,screen,se,jingle,set,renderCtl,get prefs(){return P},get state(){return{cur:curName,ctx:ctx&&ctx.state,errs}}};
+})();
+
+/* ============ テスト・自動進行用 ============ */
+const T={auto:false,fill:null,pick:null,done:null,inspect:null,request:null,check:null};
+
+/* ============ 画面・背景 ============ */
+function show(id,scene){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');if(scene)setScene(scene);Music.screen(id,scene);window.scrollTo(0,0)}
+let curScene='';
+function sceneOf(kind){if(kind==='depot')return'depot';if(SC.kind==='battle'){if(kind==='relay')return'relay';if(kind==='front')return stageScene()+':front';return stageScene()}
+ if(kind==='relay')return'hub';return SC.scenes.front}
+function setScene(name){const key=SC.key+'/'+name+'/'+(G?G.stageIdx:'');if(curScene===key)return;curScene=key;
+ let svg;if(name==='depot')svg=depotSVG();else if(name==='relay')svg=relaySVG();else if(name==='hub')svg=hubSVG();else if(name==='shop')svg=shopSVG();else if(name==='street')svg=streetSVG();
+ else if(name.endsWith(':front')){const s=sceneSVG(name.split(':')[0]);const i=s.lastIndexOf('<style>');svg=s.slice(0,i)+frontOverlay()+s.slice(i)}else svg=sceneSVG(name);
+ $('#scene').innerHTML=svg;const pk=name.split(':')[0];setParticles(PCONF[pk]?pk:'desk')}
+PCONF.depot={n:30,c:[255,220,160],up:-.04,s:[.6,1.6]};PCONF.relay={n:40,c:[255,160,70],up:-.5,s:[.8,2]};
+PCONF.hub={n:20,c:[220,235,255],up:-.03,s:[.6,1.4]};PCONF.shop={n:16,c:[255,255,255],up:-.05,s:[.6,1.4]};PCONF.street={n:24,c:[255,230,180],up:-.08,s:[.6,1.6]};
+function topbar(extra){const ch=SC.kind==='battle'?'章':'話';return `<div class="topbar win"><span class="chip">第${G.stageIdx+1}${ch} ／ 全${SC.stages.length}${ch}</span><span class="chip">${G.m.label}</span><span class="chip">${esc(roleLabel(G.role))}</span>${extra||''}</div>`}
+function roleLabel(k){const r=ROLES.find(x=>x.key===k);return (r.alt&&r.alt[SC.key])||r.label}
+const SCENE_OF2={slime:'gate',orc:'forest',reaper:'graveyard',dragon:'canyon',maou:'castle'};
+const stageScene=()=>SC.kind==='battle'?SCENE_OF2[curStage().enemy]:SC.scenes.front;
+function stageArt(st){return SC.kind==='battle'?`<div class="monster" style="--glow:${GLOW_OF[st.enemy]}">${monsterSVG(st.enemy)}</div>`:`<div class="monster" style="--glow:rgba(255,230,160,.5)">${eventSVG(st.event)}</div>`}
+function iconOf(no){return SC.kind==='battle'?itemIcon(no):svcIcon(no)}
+
+/* ============ 登場人物 ============ */
+function castName(w){const t=TM();return({me:G?({depot:t.depotMe,relay:t.relayMe,front:t.frontMe})[G.role]:'',runner:t.runner,hans:t.relayP,mirei:t.recv,leon:t.carrier,kenta:t.carrier,nar:''})[w]}
+function carrierKey(){return SC.kind==='battle'?'leon':'kenta'}
+function carrierSVG(){return SC.kind==='battle'?leonSVG():kentaSVG()}
+const ENEMY_TALK={
+ slime:['おい、そこのスライム。ここは補給線だ。通すわけにはいかない。','ぷにっ…人間…門の外へ…帰れ…ぷにっ！'],
+ orc:['森を荒らしてるのはお前たちか。','人間ども！ この森は我らのものだ。踏み潰してくれる！'],
+ reaper:['……聞こえるか、死神。ここから先は、生きてる者の道だ。','生ある者よ……その魂、貰い受けよう……'],
+ dragon:['峡谷の主よ。補給線を焼かせるわけにはいかない。','小さき者よ。我が炎の前に立つか。'],
+ maou:['魔王。補給が続く限り、俺たちは何度でも来る。','補給、か……面白い。ならば、その線ごと断ち切ってくれよう。'],
+};
+const ROLE_MONO={
+ relay:['請求書、書類、現品。三つがそろって初めて「正しい」と言える。','書いてある数と、数えた数。どちらかが嘘をついている。','単位とサイズ。書いた人の思い込みは、書類の外にある。','一行ずつ。急ぐほど、見落とす。','最後の荷だ。宛先まで、指でなぞって確かめよう。'],
+ front:['何が要るのか、決めるのはわたしだ。足りなければ、誰かが困る。','多すぎても、倉庫の在庫を食いつぶす。ちょうどいい数を。','相手の性質から、必要な物を読む。','届いた物を、請求した物と一つずつ見比べる。','最後の請求。ここで書き漏らせば、取り返しがつかない。'],
+};
+
+/* ============ 会話（ノベル形式） ============ */
+function vnSetup({top,cast=[],panel=''}){
+ $('#s-vn').innerHTML=`${top||''}<div class="vn"><div class="vn-stage">${cast.map(c=>`<div class="actor ${c.pos} ${c.monster?'mon':''}" data-who="${c.who}" ${c.monster?`style="--glow:${GLOW_OF[c.monster]}"`:''}>${c.svg}</div>`).join('')}</div>
+  ${panel?`<div class="vn-panel" id="vnPanel">${panel}</div>`:''}<div class="choices" id="vnChoices"></div>
+  <div class="dlg win" id="dlg" tabindex="0"><div class="who" id="dlgWho"></div><div class="txt" id="dlgTxt"></div><div class="nx" id="dlgNx">▼</div></div></div>`}
+function whoName(w){const n=castName(w);if(n!==undefined)return n;if(SC.enemies&&SC.enemies[w])return SC.enemies[w].name;return ''}
+function spotlight(w){document.querySelectorAll('#s-vn .actor').forEach(s=>{const on=s.dataset.who===w;s.classList.toggle('dim',!on&&!['nar','me','runner'].includes(w));s.classList.toggle('speak',on)})}
+let typing=null;
+function typeText(el,text){clearInterval(typing);if(REDUCED||SPEED<200){el.textContent=text;typing=null;return}let i=0;el.textContent='';typing=setInterval(()=>{i++;el.textContent=text.slice(0,i);if(i>=text.length){clearInterval(typing);typing=null}},28)}
+function say(lines){
+ if(T.auto)return Promise.resolve();
+ return new Promise(res=>{let i=0;const box=$('#dlg'),txt=$('#dlgTxt');$('#dlgNx').style.visibility='visible';
+  const showLine=()=>{Music.se('blip');const[w,t]=lines[i];const n=whoName(w);$('#dlgWho').textContent=n;$('#dlgWho').style.display=n?'':'none';spotlight(w);txt.classList.toggle('mono-line',w==='me'||w==='nar');typeText(txt,t)};
+  const adv=()=>{if(typing){clearInterval(typing);typing=null;txt.textContent=lines[i][1];return}i++;if(i>=lines.length){box.onclick=null;box.onkeydown=null;$('#dlgNx').style.visibility='hidden';res();return}showLine()};
+  box.onclick=adv;box.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();adv()}};showLine();box.focus({preventScroll:true})})}
+function choose(opts){
+ if(T.auto)return Promise.resolve(T.pick?T.pick(opts):opts[0].key);
+ return new Promise(res=>{const c=$('#vnChoices');c.innerHTML=opts.map(o=>`<button class="btn ${o.dark?'dark':''}" data-k="${o.key}">${esc(o.label)}</button>`).join('');
+  c.querySelectorAll('button').forEach(b=>b.onclick=()=>{c.innerHTML='';res(b.dataset.k)});c.querySelector('button').focus({preventScroll:true})})}
+
+/* ============ タイトル・選択・プロローグ ============ */
+const pick={role:'depot',mode:'easy',sc:'fantasy'};
+function renderTitleScreen(){useScenario('fantasy');$('#s-title').innerHTML=`<div class="title-wrap">
+  <h1 class="logo">異界補給戦記</h1><div class="logo-sub">補給事務トレーニング</div>
+  <div class="menu"><button class="btn" id="tStart">はじめる</button><button class="btn dark" id="tHow">遊び方</button></div>
+  <div class="title-howto win" id="howto"><ol>
+   <li>立場を選びます。<b>補給所</b>は届いた請求書から払出票を書く、<b>中継地点</b>は届いた書類を照合して通すか差し戻すか判断する、<b>前線</b>は必要な物を見積もって請求書を書き、届いた物を受領確認する立場です。</li>
+   <li>研修シナリオを選びます。異世界の補給のほか、<b>物流倉庫</b>（店舗への出荷）と<b>宅配中継</b>（集荷・仕分け・配達）があります。</li>
+   <li>書いた書類は封をして次の拠点へ送られ、書き損じもそのまま届きます。</li>
+   <li>最後に受領書へサインし、3枚の書類が<b>どこへ行くのか</b>を確かめます。</li>
+   <li>異世界では戦闘、業務モードでは店舗の営業や配達で、補給の結果が試されます。</li>
+   <li><b>振り返り</b>で、どの書き損じや判断が結果にどう響いたかを確認します。</li>
+  </ol></div><div class="best" id="bestLine"></div>
+  <div class="footer">登場する組織・人物・店舗・物品番号・様式はすべて架空のものです。</div></div>`;
+ $('#tStart').onclick=()=>{renderSetup();show('s-setup','gate')};$('#tHow').onclick=()=>$('#howto').classList.toggle('on');
+ const best=store.get('ikai_best2',{}),n=Object.keys(best).length;$('#bestLine').textContent=n?`これまでの記録：${n}件の組み合わせをクリア`:'';
+}
+function renderSetup(){
+ $('#s-setup').innerHTML=`<div class="selwrap win" style="margin-top:3vh"><h2 style="text-align:center;color:var(--brass-l)">任務の選択</h2>
+  <h3>研修シナリオ</h3><div class="opts" id="scCards"></div><h3>立場</h3><div class="opts" id="roleCards"></div><h3>難易度</h3><div class="opts" id="modeCards"></div>
+  <div class="startbar"><button class="btn dark" id="sBack">もどる</button>　<button class="btn" id="startBtn">任務を受ける</button></div><div class="best" id="bestSel"></div></div>`;
+ renderPick();$('#sBack').onclick=toTitle;$('#startBtn').onclick=()=>{newGame(pick.mode,pick.role,pick.sc);playPrologue()};
+}
+function renderPick(){
+ $('#scCards').innerHTML=Object.values(SCENARIOS).map(s=>`<button class="opt ${pick.sc===s.key?'sel':''}" data-sc="${s.key}"><b>${s.label}</b><div class="d">${s.desc}</div></button>`).join('');
+ $('#roleCards').innerHTML=ROLES.map(r=>`<button class="opt ${pick.role===r.key?'sel':''}" data-role="${r.key}"><b>${(r.alt&&r.alt[pick.sc])||r.label}</b><div class="d">${r.desc}</div></button>`).join('');
+ $('#modeCards').innerHTML=Object.entries(MODES).map(([k,m])=>`<button class="opt ${pick.mode===k?'sel':''}" data-mode="${k}"><b>${m.label}</b><ul>${m.items.map(i=>`<li>${i}</li>`).join('')}</ul></button>`).join('');
+ const b=store.get('ikai_best2',{})[`${pick.sc}/${pick.role}/${pick.mode}`];$('#bestSel').textContent=b?`この組み合わせの自己ベスト：${b.score}点（${b.rank}）`:'この組み合わせはまだ記録がありません';
+}
+document.addEventListener('click',e=>{const c=e.target.closest('.opt');if(!c||c.disabled)return;if(c.dataset.role)pick.role=c.dataset.role;if(c.dataset.mode)pick.mode=c.dataset.mode;if(c.dataset.sc)pick.sc=c.dataset.sc;if($('#scCards'))renderPick()});
+function toTitle(){if(G)clearInterval(G.timerId);renderTitleScreen();show('s-title','gate')}
+function playPrologue(){
+ if(T.auto){stageFlow();return}
+ show('s-prologue',SC.kind==='battle'?'gate':'depot');const P=$('#s-prologue');
+ P.innerHTML=`<div class="mono">${SC.prologue.map(l=>`<p>${esc(l)}</p>`).join('')}</div><button class="btn dark sm skip" id="pSkip">飛ばす</button><div class="hint">画面を押すと続きを読みます</div>`;
+ const ps=[...P.querySelectorAll('.mono p')];let i=0,ended=false;const end=()=>{if(ended)return;ended=true;P.onclick=null;stageFlow()};
+ const next=()=>{if(i<ps.length)ps[i++].classList.add('on');else end()};next();P.onclick=e=>{if(e.target.id==='pSkip'){end();return}next()};
+}
+
+/* ============ ゲーム状態 ============ */
+let G=null;
+function makeStock(mode){if(mode==='easy'){const s={};SC.catalog.forEach(it=>{if(it.sized)SC.sizes.slice(1).forEach(z=>s[it.no+'|'+z]=Infinity);else s[it.no]=Infinity});return s}return Object.assign({},SC.stock[mode])}
+function newGame(mode,role,sc){useScenario(sc||'fantasy');curScene='';G={mode,role:role||'depot',m:MODES[mode],stageIdx:0,stock:makeStock(mode),inv:Object.assign({},SC.startInv),equip:{rifle:true,rr:false,vest:false,mantle:false},results:[],retries:0,rewrites:0,totalDocTime:0}}
+const curStage=()=>SC.stages[G.stageIdx];
+const inv=k=>G.inv[k]||0;
+function take(k,n){G.inv[k]=Math.max(0,inv(k)-n)}
+function fmtN(v){return v===Infinity?'∞':(v||0)}
+function stockText(it){return it.sized?SC.sizes.slice(1).map(z=>z+fmtN(G.stock[it.no+'|'+z])).join(' '):fmtN(G.stock[it.no])}
+function stockZero(it){return it.sized?SC.sizes.slice(1).every(z=>!G.stock[it.no+'|'+z]):!G.stock[it.no]}
+function keyLabel(k){const[no,z]=k.split('|');const it=cat(no);return it?(it.name+(z?`（${z}）`:'')):k}
+function lineKey(l){return cat(l.no).sized?l.no+'|'+l.size:l.no}
+function squadStats(){return{maxHp:120+G.buff.hpPlus,atk:Math.round(G.buff.atkMul*100),def:4+(G.equip.vest?6:0)}}
+function snapshot(){G.snap={stock:Object.assign({},G.stock),inv:Object.assign({},G.inv),equip:Object.assign({},G.equip)}}
+function restore(){G.stock=Object.assign({},G.snap.stock);G.inv=Object.assign({},G.snap.inv);G.equip=Object.assign({},G.snap.equip);G.buff={hpPlus:0,atkMul:1,holy:false,rations:0,potions:0}}
+const fillCorrectFn=()=>{const st=curStage();G.doc.reqNo=st.reqNo;G.doc.dest=st.dest;st.lines.forEach((l,k)=>{const it=cat(l.no);G.doc.rows[k]={no:l.no,size:it.sized?l.size:'—',qty:String(l.qty),unit:it.unit}})};
+
+/* ============ 章の流れ ============ */
+async function stageFlow(){
+ snapshot();G.buff={hpPlus:0,atkMul:1,holy:false,rations:0,potions:0};
+ await briefScreen();
+ for(;;){
+  if(G.role==='depot'){if(!G.prevDoc)await depotIntro();await docScreen('depot',G.prevDoc);const ev=G.cur.ev;ev.rows.forEach(r=>{ev.proc[r.i]=processRow(r,ev.destOk)});buildDepotResult();
+   const a=await relayNpcScreen();if(a==='redo'){redo();continue}}
+  else if(G.role==='relay'){await relayIntro();await inspectScreen();applyInspection()}
+  else {if(!G.prevDoc)await frontIntro();await docScreen('front',G.prevDoc);applyRequest()}
+  const b=await frontScreen(false);if(b==='redo'){redo();continue}
+  break;
+ }
+ G.prevDoc=null;
+ await signReceipt();
+ await trailScreen();
+ for(;;){const c=await encounter();if(c==='back'){await frontScreen(true);continue}
+  if(SC.kind==='battle')startBattle(c!=='manual');else outcomeScreen();break}
+}
+function redo(){restore();G.rewrites++;G.prevDoc=G.role==='relay'?null:G.doc;G.totalDocTime-=G.cur.elapsed||0}
+function briefScreen(){
+ const st=curStage(),t=TM();let head,body,tr='';
+ if(SC.kind==='battle'){const E=SC.enemies[st.enemy];head=`${E.name}、${esc(st.dest.replace(/前進拠点|陣地|野営地|前哨/,''))}に現る`;tr=`<div class="traits">${E.traits.map(x=>`<span>${SC.traitText[x]}</span>`).join('')||'<span>特殊な力は持たない</span>'}</div>`}
+ else head=esc(st.title);
+ const roleNote={depot:`${esc(st.from||t.reqFrom)}から、${t.depot}に${t.req}（${st.reqNo}）が送られた。`,relay:`${t.depot}から${t.relay}へ、荷と${t.doc}（${st.reqNo}）が向かっている。`,front:`${esc(st.dest)}で、${t.req}を書いて${t.depot}へ送らなければならない。`}[G.role];
+ $('#s-brief').innerHTML=`${topbar(`<b class="grow">${t.briefTab}</b>`)}
+ <div class="brief"><div class="scroll"><div class="parch"><h3>${t.brief} <small>${esc(st.date)}</small></h3>
+  <h2 style="font-size:30px;margin:4px 0 8px">${head}</h2><p style="margin:0 0 6px">${esc(st.intel)}</p>${tr}
+  <p style="margin:14px 0 4px;font-size:14px">${roleNote}${G.m.timer?`書類は砂時計が落ちきるまでの${G.m.timer/60}分で仕上げること。`:''}</p>
+  <div style="margin-top:14px"><button class="btn" id="toNext">${{depot:t.depot,relay:t.relay,front:esc(st.dest)}[G.role]}へ向かう</button></div></div></div>${stageArt(st)}</div>`;
+ show('s-brief',SC.kind==='battle'?stageScene():'depot');
+ if(T.auto)return Promise.resolve();return new Promise(r=>$('#toNext').onclick=r);
+}
+async function depotIntro(){const st=curStage(),t=TM();
+ vnSetup({top:topbar(`<b class="grow">${t.depot}</b>`)});show('s-vn','depot');
+ const urgent=SC.kind==='battle'?`${SC.enemies[st.enemy].name}が出たそうで、急ぎだそうです！`:`${st.title}だそうで、急ぎでお願いします！`;
+ await say([['runner',`${t.depot}の方！ ${st.from||t.reqFrom}から${t.req}です。${urgent}`],['me',SC.monologue[G.stageIdx]]]);
+ await choose([{key:'go',label:`${t.counter}で${t.doc}を書く`}]);
+}
+async function relayIntro(){const t=TM();
+ vnSetup({top:topbar(`<b class="grow">${t.relay}</b>`),cast:[{who:'hans',pos:'l',svg:hansSVG()}]});show('s-vn',sceneOf('relay'));
+ await say([['hans',`${t.depot}から荷と${t.doc}が届いたぞ。今日の照合はお前に任せる。`],['hans',`${t.req}の写し、${t.doc}、それに現品。三つを突き合わせて、通すか差し戻すか決めるんだ。`],['me',ROLE_MONO.relay[G.stageIdx]]]);
+ await choose([{key:'go',label:'照合を始める'}]);
+}
+async function frontIntro(){const t=TM(),st=curStage(),ck=carrierKey();
+ vnSetup({top:topbar(`<b class="grow">${t.front}　${esc(st.dest)}</b>`),cast:[{who:'mirei',pos:'l',svg:mireiSVG(true)},{who:ck,pos:'c',svg:carrierSVG()}]});show('s-vn',sceneOf('front'));
+ const L=SC.kind==='battle'?[[ck,`次は${SC.enemies[st.enemy].name}か……。補給を頼まないと、丸腰で行くことになる。`],['mirei',`${t.req}は、あなたが書いて${t.depot}へ送ってくださいね。何をどれだけ頼むかが大事ですよ。`]]:[['mirei',`${st.title}。お店の棚、このままだと足りなくなりそうです。`],[ck,`${t.req}を書いてくれれば、${t.depot}から運んでくるよ。何をどれだけ頼むかが大事だ。`]];
+ L.push(['me',ROLE_MONO.front[G.stageIdx]]);await say(L);
+ await choose([{key:'go',label:`${t.req}を書く`}]);
+}
+
+/* ============ 書類フォーム（補給所の払出票・前線の請求書） ============ */
+function hourglass(){return `<svg viewBox="0 0 40 60"><path d="M4 2h32M4 58h32" stroke="#c9a04f" stroke-width="3"/><path d="M8 4 C8 20 18 24 18 30 C18 36 8 40 8 56 H32 C32 40 22 36 22 30 C22 24 32 20 32 4Z" fill="rgba(200,230,255,.12)" stroke="#e9dcc0" stroke-width="1.5"/><path class="sand-top" d="M10 8 H30 C29 18 22 22 20 28 C18 22 11 18 10 8Z" fill="#e8c46a"/><path class="sand-bot" d="M10 55 C12 46 17 42 20 40 C23 42 28 46 30 55Z" fill="#e8c46a"/></svg>`}
+function startTimer(onUp){G.docStart=Date.now();clearInterval(G.timerId);if(G.m.timer&&!T.auto){G.timeLeft=G.m.timer;updateTimer();G.timerId=setInterval(()=>{G.timeLeft--;updateTimer();if(G.timeLeft<=0)onUp()},1000)}}
+function updateTimer(){const h=$('#hg');if(!h)return;const s=Math.max(0,G.timeLeft),r=s/G.m.timer;h.querySelector('b').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;h.querySelector('.sand-top').style.transform=`scaleY(${r})`;h.querySelector('.sand-bot').style.transform=`scaleY(${1-r})`;h.classList.toggle('low',s<=30)}
+function catalogPanel(){const t=TM();return `<div class="tome"><div class="parch" style="padding:16px 16px 14px"><h3>${t.catTitle} <small>${G.m.stock==='unlimited'?`${t.stockWord}は尽きない`:`払い出すと${t.stockWord}が減る`}</small></h3>
+ <table class="ptab cat"><thead><tr><th>番号</th><th>品名</th><th>単位</th><th>${t.stockWord}</th></tr></thead><tbody>
+ ${SC.catalog.map(it=>`<tr id="cat-${it.no}" data-no="${it.no}" title="${esc(it.note)}"><td class="no">${it.no}</td><td>${esc(it.name)}${it.sized?`<br><small>${SC.key==='delivery'?'温度帯の指定あり':'サイズ指定あり'}</small>`:''}</td><td>${it.unit}</td><td class="stk ${stockZero(it)?'zero':''}">${stockText(it)}</td></tr>`).join('')}</tbody></table></div></div>`}
+const SPEC=()=>SC.key==='delivery'?'温度帯':'規格';
+function docScreen(kind,prefill){return new Promise(res=>{G.docResolve=res;G.docKind=kind;openDoc(prefill);
+ if(T.auto){if(kind==='depot')(T.fill||fillCorrectFn)();else (T.request||fillCorrectFn)();submitDoc(false)}})}
+function openDoc(prefill){
+ const st=curStage(),n=st.lines.length+(G.docKind==='front'?3:2);
+ G.doc={reqNo:prefill?prefill.reqNo:(G.docKind==='front'?st.reqNo:''),dest:prefill?prefill.dest:'',rows:Array.from({length:n},(_,k)=>prefill&&prefill.rows[k]?Object.assign({},prefill.rows[k]):({no:'',size:'—',qty:'',unit:'—'}))};
+ G.activeRow=0;renderDoc();show('s-doc','depot');
+ $('#f-reqno').value=G.doc.reqNo;if(G.docKind==='front')$('#f-reqno').readOnly=true;
+ if(prefill){$('#f-dest').value=G.doc.dest;G.doc.rows.forEach((_,k)=>syncRow(k))}
+ updateGuide();startTimer(()=>submitDoc(true));
+}
+function renderDoc(){
+ const st=curStage(),t=TM(),front=G.docKind==='front',opt=(arr,v)=>arr.map(a=>`<option ${a===v?'selected':''}>${a}</option>`).join('');
+ let left;
+ if(!front)left=`<div class="parch pinned"><h3>${t.req} <small>番号 <b id="req-reqno" style="font-family:'Klee One',cursive;font-size:16px">${st.reqNo}</b></small></h3>
+  <table class="kv"><tr><td>依頼元</td><td>${esc(st.from||t.reqFrom)}</td></tr><tr id="req-dest"><td>${SC.key==='delivery'?'お届け先':'受領場所'}</td><td><b>${esc(st.dest)}</b></td></tr><tr><td>日付</td><td>${esc(st.date)}</td></tr></table>
+  <table class="ptab" style="margin-top:10px"><thead><tr><th>行</th><th>品名・規格</th><th>数量</th></tr></thead><tbody>${st.lines.map((l,k)=>`<tr id="req-${k}"><td>${k+1}</td><td style="font-family:'Klee One',cursive;font-size:15px">${esc(l.label)}</td><td style="font-family:'Klee One',cursive;font-size:15px;white-space:nowrap">${esc(l.qtyText)}</td></tr>`).join('')}</tbody></table>
+  <div class="memo">${esc(st.intel)}</div></div>`;
+ else{const have=Object.keys(G.inv).filter(k=>G.inv[k]>0);
+  const memo=SC.kind==='battle'?(G.m.guide?`<div class="memo"><b>小隊長のメモ：</b>${esc(st.hint)}</div>`:`<div class="memo">敵の特徴から、何がどれだけ要るかを見積もる。</div>`):`<div class="memo"><b>需要予測：</b><ul style="margin:4px 0 0;padding-left:18px">${st.lines.map(l=>`<li>${esc(l.need)}</li>`).join('')}</ul></div>`;
+  left=`<div class="parch pinned"><h3>${SC.kind==='battle'?'敵情と手持ち':'需要と手持ち'} <small>${esc(st.date)}</small></h3>
+  <p style="margin:0 0 6px;font-size:14px">${esc(st.intel)}</p>${SC.kind==='battle'?`<div class="traits">${SC.enemies[st.enemy].traits.map(x=>`<span>${SC.traitText[x]}</span>`).join('')||'<span>特殊な力は持たない</span>'}</div><p style="font-size:13px;margin:8px 0 0">レオンのサイズ：防弾チョッキ <b>M</b>／耐火マント <b>L</b></p>`:''}
+  ${memo}<p style="font-size:13px;margin:10px 0 2px"><b>いまの手持ち</b>（前の${SC.kind==='battle'?'章':'話'}の残り）</p><p style="font-size:13px;margin:0">${have.length?have.map(k=>`${esc(keyLabel(k))}×${G.inv[k]}`).join('、'):'なし'}</p></div>`}
+ const title=front?t.req:t.doc;
+ $('#s-doc').innerHTML=`${topbar(`<b>${front?esc(st.dest):t.counter}</b><span class="grow muted" style="font-size:14px">${front?`必要な物を見積もり、${t.req}を書いて送る。`:`${t.req}を読み、${t.doc}を書いて送り出す。`}</span>${G.m.timer?`<span class="hg" id="hg">${hourglass()}<b></b></span>`:''}<button class="btn wax" id="submitBtn">署名して送り出す</button>`)}
+ ${G.m.guide?'<div class="omen win" id="guide"><span class="em">導</span><span id="guideText"></span></div>':''}
+ <div class="docgrid">${left}
+  <div class="parch"><h3>${title} <small>${SC.label}　${front?esc(st.dest):t.depot}</small></h3>
+   <div class="hdrf"><label>${front?'請求番号（自動）':'依頼番号'}<input id="f-reqno" placeholder="X-0000" autocomplete="off"></label><label>${SC.key==='delivery'?'お届け先（区域）':'交付先（受領場所）'}<select id="f-dest"><option value="">選んでください</option>${SC.destinations.map(d=>`<option>${d}</option>`).join('')}</select></label></div>
+   <table class="ptab form"><thead><tr><th>行</th><th>番号</th><th>品名（自動表示）</th><th>${SPEC()}</th><th>数量</th><th>単位</th><th></th></tr></thead><tbody>
+   ${G.doc.rows.map((r,k)=>`<tr id="row-${k}" data-k="${k}"><td>${k+1}</td><td style="min-width:120px"><input id="r${k}-no" data-k="${k}" data-f="no" placeholder="番号" autocomplete="off"></td><td class="name" id="r${k}-name"></td>
+    <td style="width:${SC.key==='delivery'?74:58}px"><select id="r${k}-size" data-k="${k}" data-f="size">${opt(SC.sizes,'—')}</select></td><td style="width:72px"><input id="r${k}-qty" data-k="${k}" data-f="qty" type="number" min="0" inputmode="numeric"></td>
+    <td style="width:70px"><select id="r${k}-unit" data-k="${k}" data-f="unit">${opt(SC.units,'—')}</select></td><td><button class="x" data-clear="${k}" aria-label="${k+1}行目を消す">✕</button></td></tr>`).join('')}</tbody></table>
+   <div class="note">書き方：番号は${t.catShort}から写す（${t.catShort}の行を押すと、選んでいる行に入ります）。単位は${t.catShort}の単位に合わせる。${SPEC()}の指定がある物品は${SPEC()}を書き、それ以外は「—」。最後に品名欄で、物品が正しいか確かめる。</div></div>
+  ${catalogPanel()}</div>`;
+ updateTimer();const doc=$('#s-doc');
+ doc.querySelectorAll('input,select').forEach(el=>{el.addEventListener('input',onDocInput);el.addEventListener('change',onDocInput);el.addEventListener('focus',()=>{if(el.dataset.k!==undefined)setActiveRow(+el.dataset.k)})});
+ doc.querySelectorAll('[data-clear]').forEach(b=>b.onclick=()=>{const k=+b.dataset.clear;G.doc.rows[k]={no:'',size:'—',qty:'',unit:'—'};syncRow(k);updateGuide()});
+ doc.querySelectorAll('.cat tbody tr').forEach(tr=>tr.onclick=()=>catClick(tr.dataset.no));
+ $('#submitBtn').onclick=()=>submitDoc(false);setActiveRow(0);
+}
+function setActiveRow(k){G.activeRow=k;document.querySelectorAll('.form tbody tr').forEach(tr=>tr.classList.toggle('active',+tr.dataset.k===k))}
+function onDocInput(e){const el=e.target;if(el.id==='f-reqno')G.doc.reqNo=el.value;else if(el.id==='f-dest')G.doc.dest=el.value;else if(el.dataset.f){G.doc.rows[+el.dataset.k][el.dataset.f]=el.value;if(el.dataset.f==='no')syncName(+el.dataset.k)}updateGuide()}
+function syncName(k){const n=norm(G.doc.rows[k].no),cell=$('#r'+k+'-name');if(!cell)return;if(!n){cell.textContent='';cell.classList.remove('ng');return}const it=cat(n);cell.textContent=it?it.name:'該当なし';cell.classList.toggle('ng',!it)}
+function syncRow(k){const r=G.doc.rows[k];$('#r'+k+'-no').value=r.no;$('#r'+k+'-size').value=r.size;$('#r'+k+'-qty').value=r.qty;$('#r'+k+'-unit').value=r.unit;syncName(k)}
+function catClick(no){let k=G.activeRow;if(k==null||k>=G.doc.rows.length)k=G.doc.rows.findIndex(r=>!r.no);if(k<0)return;G.doc.rows[k].no=no;syncRow(k);const it=cat(no);const nx=it.sized?$('#r'+k+'-size'):$('#r'+k+'-qty');nx&&nx.focus();updateGuide()}
+function guideTarget(){
+ const st=curStage(),d=G.doc,t=TM(),front=G.docKind==='front';
+ if(!front&&norm(d.reqNo)!==norm(st.reqNo))return{el:'#f-reqno',req:'#req-reqno',msg:`${t.req}の右上にある番号を、${t.doc}の「依頼番号」に写しましょう。`};
+ if(d.dest!==st.dest)return{el:'#f-dest',req:'#req-dest',msg:front?`受領場所は、いまいる「${st.dest}」です。`:`${t.req}の${SC.key==='delivery'?'お届け先':'受領場所'}を、${t.doc}で選びましょう。`};
+ for(let k=0;k<st.lines.length;k++){const l=st.lines[k],r=d.rows[k],it=cat(l.no);
+  if(norm(r.no)!==l.no)return{el:`#r${k}-no`,req:`#req-${k}`,cat:l.no,msg:front?`${k+1}行目：「${l.label}」を${t.catShort}で探して、番号を書きましょう（赤い行を押しても書けます）。`:`${t.req}${k+1}行目の「${l.label}」を${t.catShort}で探し、${k+1}行目に番号を書きましょう。赤い行を押しても書けます。`};
+  const ws=it.sized?l.size:'—';if(r.size!==ws)return{el:`#r${k}-size`,req:`#req-${k}`,msg:it.sized?`「${it.name}」は${SPEC()}の指定がある物品です。「${l.size}」を選びましょう。`:`「${it.name}」は${SPEC()}の指定がないので「—」のままにします。`};
+  if(String(r.qty).trim()===''||Number(r.qty)!==l.qty)return{el:`#r${k}-qty`,req:`#req-${k}`,msg:front?`数量は「${l.qty}」が目安です（${t.catShort}の単位「${it.unit}」で数えます）。`:`数量に${t.req}どおり「${l.qty}」と書きましょう。`};
+  if(r.unit!==it.unit)return{el:`#r${k}-unit`,req:`#req-${k}`,cat:l.no,msg:`単位は${t.catShort}に合わせます。${front?'':`${t.req}では「${l.qtyText}」ですが、`}${t.catShort}の単位は「${it.unit}」です。`};
+ }
+ for(let k=st.lines.length;k<d.rows.length;k++){const r=d.rows[k];if(r.no||r.qty!==''||r.unit!=='—'||r.size!=='—')return{el:`#r${k}-no`,msg:`${k+1}行目は${front?'見積もりに入っていない':'請求されていない'}行です。✕で消しましょう。`}}
+ return null}
+function updateGuide(){if(!G.m.guide||!$('#guide'))return;
+ document.querySelectorAll('.guide').forEach(e=>e.classList.remove('guide'));document.querySelectorAll('.guide-row').forEach(e=>e.classList.remove('guide-row'));
+ const g=guideTarget(),bar=$('#guide');
+ if(!g){bar.classList.add('ok');$('#guideText').textContent='すべて正しく書けました。「署名して送り出す」を押しましょう。';$('#submitBtn').classList.add('guide');return}
+ bar.classList.remove('ok');$('#guideText').textContent=g.msg;const el=$(g.el);if(el)el.classList.add('guide');if(g.req){const r=$(g.req);if(r)r.classList.add('guide-row')}if(g.cat){const c=document.getElementById('cat-'+g.cat);if(c)c.classList.add('guide-row')}}
+
+/* ============ 署名演出 ============ */
+function waxSVG(){const r=seeded(Date.now()%9973);let pts=[];for(let i=0;i<28;i++){const a=i/28*Math.PI*2,rr=46+r()*5;pts.push(`${(52+Math.cos(a)*rr).toFixed(1)},${(52+Math.sin(a)*rr).toFixed(1)}`)}const u='w'+(++UID);const ch=SC.kind==='battle'?'補':'検';
+ return `<svg viewBox="0 0 104 104"><defs><radialGradient id="g${u}" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#d9503c"/><stop offset=".55" stop-color="#931e1a"/><stop offset="1" stop-color="#4e0909"/></radialGradient></defs><polygon points="${pts.join(' ')}" fill="url(#g${u})"/><circle cx="52" cy="52" r="33" fill="none" stroke="#5a0c0c" stroke-width="3" opacity=".7"/><text x="52" y="66" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="38" fill="#5a0c0c" opacity=".85">${ch}</text><text x="51" y="65" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="38" fill="#ff9a80" opacity=".25">${ch}</text><ellipse cx="36" cy="30" rx="10" ry="5" fill="#fff" opacity=".22" transform="rotate(-30 36 30)"/></svg>`}
+function hankoSVG(a,b){return `<svg viewBox="0 0 104 104"><g transform="rotate(-6 52 52)"><rect x="14" y="10" width="76" height="84" rx="8" fill="none" stroke="#c0281e" stroke-width="6" opacity=".9"/><text x="52" y="48" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="30" fill="#c0281e">${a||'受'}</text><text x="52" y="82" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="30" fill="#c0281e">${b||'領'}</text></g></svg>`}
+const SIG_ME='M6 46 C18 18 34 10 36 30 C38 50 22 58 30 40 C38 22 58 18 60 38 C62 52 70 50 78 34 C84 22 92 22 94 36 C96 50 108 48 116 30 C122 18 132 20 132 36 C132 50 146 50 156 32 C164 18 178 20 180 36 C182 48 196 46 208 30 C216 20 230 24 252 40';
+const SIG_LEON='M8 50 L22 14 L34 50 M26 34 C40 30 52 30 58 36 C66 46 60 56 70 50 C82 42 84 22 96 24 C108 26 100 50 112 50 C126 50 128 26 140 28 C150 30 146 48 158 48 C172 48 178 30 196 34 C214 38 220 52 250 44';
+function playSign(o,done){
+ const S=$('#sign');
+ S.innerHTML=`<div class="sign-paper parch" id="sp"><h3>${o.title} <small>${o.sub}</small></h3><table class="sumtab">${o.rows||'<tr><td></td><td>（記入なし）</td></tr>'}</table>
+  <div class="sigline"><span>${o.signer}</span><div class="sigbox"><svg class="sig" viewBox="0 0 260 70"><path class="sigpath" id="sigp" d="${o.path}"/></svg>
+   <svg class="quill" id="quill" viewBox="0 0 60 120" style="offset-path:path('${o.path}')"><path d="M56 2 C34 16 18 48 12 100 L16 101 C24 62 38 30 58 6Z" fill="#f6f1e6" stroke="#9a8f7a" stroke-width="1.2"/><path d="M56 3 C40 30 24 66 14 100" stroke="#9a8f7a" stroke-width="1" fill="none"/><path d="M12 100 L8 117 L16 101Z" fill="#1c2c55"/></svg></div></div>
+  <div class="waxseal" id="wax">${o.seal==='wax'?waxSVG():hankoSVG(o.seal[0],o.seal[1])}</div></div><div class="sign-cap" id="scap">${o.caps[0]}</div><div class="sign-skip">画面を押すと演出を飛ばせます</div>`;
+ S.classList.add('on');let finished=false;const timers=[];const fin=()=>{if(finished)return;finished=true;timers.forEach(clearTimeout);S.classList.remove('on');S.innerHTML='';done()};S.onclick=fin;
+ if(REDUCED||SPEED<200||T.auto){timers.push(setTimeout(fin,(SPEED<200||T.auto)?0:400));return}
+ const p=$('#sigp'),len=p.getTotalLength(),q=$('#quill');p.style.strokeDasharray=len;p.style.strokeDashoffset=len;
+ timers.push(setTimeout(()=>{Music.se('quill');q.classList.add('go');p.animate([{strokeDashoffset:len},{strokeDashoffset:0}],{duration:1400,easing:'ease-in-out',fill:'forwards'});q.animate([{offsetDistance:'0%'},{offsetDistance:'100%'}],{duration:1400,easing:'ease-in-out',fill:'forwards'})},250));
+ timers.push(setTimeout(()=>{q.classList.add('lift');$('#scap').textContent=o.caps[1]},1750));
+ timers.push(setTimeout(()=>{setTimeout(()=>Music.se(o.seal==='wax'?'seal':'stamp'),300);$('#wax').classList.add('on');setTimeout(()=>{const sp=$('#sp');sp&&sp.classList.add('thud')},330)},2050));
+ timers.push(setTimeout(()=>{$('#scap').textContent=o.caps[2];Music.se('whoosh');$('#sp').classList.add('fly')},2900));timers.push(setTimeout(fin,3900));
+}
+function docRowsHTML(rows){return rows.filter(r=>r.no||r.qty!=='').map((r,i)=>`<tr><td>${i+1}</td><td>${esc(norm(r.no)||'—')}</td><td>${esc(cat(norm(r.no))?cat(norm(r.no)).name:'')}</td><td>${esc(r.size)}</td><td>${esc(r.qty||'')}${esc(r.unit==='—'?'':r.unit)}</td></tr>`).join('')}
+function submitDoc(timeUp){
+ clearInterval(G.timerId);if(!$('#s-doc').classList.contains('active')||G.submitting)return;G.submitting=true;
+ const elapsed=Math.round((Date.now()-G.docStart)/1000),d=G.doc,t=TM(),front=G.docKind==='front';
+ G.cur={elapsed,timeUp,ev:front?null:evaluate()};G.totalDocTime+=elapsed;
+ playSign({title:front?t.req:t.doc,sub:`${esc(d.reqNo||'番号なし')}　→　${esc(d.dest||'宛先なし')}`,rows:docRowsHTML(d.rows),signer:front?t.reqSigner:`${t.depot} 署名`,path:SIG_ME,seal:'wax',
+  caps:[timeUp?'砂が落ちきった。書きかけのまま署名する…':'署名しています…','封蝋を押す',front?`${t.depot}へ送る`:`荷とともに${t.relay}へ送り出す`]},()=>{G.submitting=false;const r=G.docResolve;G.docResolve=null;r&&r()});
+}
+
+/* ============ 補給所の立場：判定と払い出し ============ */
+function evaluate(){
+ const st=curStage(),d=G.doc;
+ const rows=d.rows.map((r,i)=>({no:norm(r.no),size:r.size,qty:String(r.qty).trim()===''?null:parseInt(r.qty,10),unit:r.unit,i})).filter(r=>r.no!==''||r.qty!==null||r.unit!=='—'||r.size!=='—');
+ const used=new Set(),match=new Array(st.lines.length).fill(null);
+ const want=l=>cat(l.no).sized?l.size:'—';
+ st.lines.forEach((l,k)=>{const r=rows.find(r=>!used.has(r.i)&&r.no===l.no&&r.size===want(l));if(r){match[k]=r;used.add(r.i)}});
+ st.lines.forEach((l,k)=>{if(match[k])return;const r=rows.find(r=>!used.has(r.i)&&r.no===l.no);if(r){match[k]=r;used.add(r.i)}});
+ st.lines.forEach((l,k)=>{if(match[k])return;let r=rows.find(r=>r.i===k&&!used.has(r.i));if(!r)r=rows.find(r=>!used.has(r.i)&&!st.lines.some(x=>x.no===r.no));if(r){match[k]=r;used.add(r.i)}});
+ const extras=rows.filter(r=>!used.has(r.i));
+ const reqOk=norm(d.reqNo)===norm(st.reqNo),destOk=d.dest===st.dest;
+ let correct=(reqOk?1:0)+(destOk?1:0),total=2;
+ const lines=st.lines.map((l,k)=>{const it=cat(l.no),r=match[k],wantSize=want(l);
+  const ok={no:!!r&&r.no===l.no,size:!!r&&r.size===wantSize,qty:!!r&&r.qty===l.qty,unit:!!r&&r.unit===it.unit};
+  total+=4;correct+=Object.values(ok).filter(Boolean).length;return{l,it,r,ok,wantSize}});
+ total+=extras.length*2;
+ return{reqOk,destOk,lines,extras,rows,correct,total,proc:{}};
+}
+function processRow(r,destOk,noStock){
+ const it=cat(r.no);
+ if(!it)return{status:'none',reason:'nonexist',text:`番号「${r.no||'空欄'}」に該当する物品がなく、払い出せなかった`};
+ const qty=r.qty||0;
+ if(qty<=0)return{status:'none',reason:'noqty',it,text:`「${it.name}」は数量が書かれておらず、払い出せなかった`};
+ if(r.unit!==it.unit)return{status:'returned',reason:'unit',it,text:`「${it.name}」は単位「${r.unit}」が${TM().catShort}の単位「${it.unit}」と違い、${TM().relay}で差し戻された`};
+ if(it.sized&&r.size==='—')return{status:'returned',reason:'nosize',it,text:`「${it.name}」は${SPEC()}が書かれておらず、${TM().relay}で差し戻された`};
+ const key=it.sized?it.no+'|'+r.size:it.no;
+ let give=qty;if(!noStock){const have=G.stock[key]||0;give=Math.min(qty,have);G.stock[key]=have-give}
+ if(destOk&&give>0)G.inv[key]=inv(key)+give;
+ const name=keyLabel(key);
+ if(give===0)return{status:'short',it,key,give,qty,text:`「${name}」は${TM().stockWord}がなく、払い出せなかった`};
+ if(give<qty)return{status:'short',it,key,give,qty,text:`「${name}」は${TM().stockWord}不足で ${give}${it.unit} しか払い出せなかった（記入 ${qty}${it.unit}）`};
+ return{status:'ok',it,key,give,qty,text:`「${name}」${give}${it.unit} を払い出した`};
+}
+function buildDepotResult(){const ev=G.cur.ev,st=curStage();
+ G.cur.reqOk=ev.reqOk;G.cur.destOk=ev.destOk;G.cur.destName=G.doc.dest;
+ G.cur.arrivals=ev.destOk?ev.rows.map(r=>ev.proc[r.i]).filter(p=>(p.status==='ok'||p.status==='short')&&p.give>0).map(p=>({key:p.key,give:p.give,it:p.it})):[];
+ G.cur.returned=ev.rows.map(r=>ev.proc[r.i]).filter(p=>p.status==='returned'||p.status==='none').map(p=>p.it?p.it.name:'不明な物品');
+ G.cur.relayList=ev.rows.map(r=>ev.proc[r.i]);
+ const issues=[];
+ ev.lines.forEach(x=>{if(!x.r){issues.push(`「${x.it.name}」が${TM().doc}に無い → 追加の払出が必要`);return}const p=ev.proc[x.r.i];
+  if(!x.ok.no){const g=cat(x.r.no);issues.push(g?`「${g.name}」を誤って払出 → 返納と正しい物品の再払出`:'番号の誤り → 再払出')}
+  else{if(!x.ok.size&&x.it.sized&&x.r.size!=='—')issues.push(`「${x.it.name}」の${SPEC()}違い → 交換の手続き`);if(!x.ok.qty&&x.r.qty!=null){if(x.r.qty>x.l.qty)issues.push(`「${x.it.name}」の数量過剰 → 余剰分の返納`);else issues.push(`「${x.it.name}」の数量不足 → 追加の払出`)}}
+  if(p&&p.status==='short')issues.push(`「${x.it.name}」の${TM().stockWord}不足 → 上位拠点へ請求`);if(p&&(p.status==='returned'||p.status==='none'))issues.push(`「${(p.it||x.it).name}」は差し戻しで未着 → 書き直して再払出`)});
+ ev.extras.forEach(r=>{const g=cat(r.no);issues.push(`請求されていない「${g?g.name:r.no||'不明'}」を払出 → 返納`)});
+ G.cur.issues=issues;
+}
+async function relayNpcScreen(){
+ const ev=G.cur.ev,d=G.doc,t=TM();
+ const st=p=>p.status==='ok'?'<span class="stamp ok">通過</span>':p.status==='short'?'<span class="stamp w">不足</span>':p.status==='returned'?'<span class="stamp ng">差戻</span>':'<span class="stamp ng">該当無</span>';
+ const list=ev.rows.map((r,i)=>{const p=ev.proc[r.i];return `<li style="animation-delay:${.5+i*.45}s">${st(p)}<span>${esc(p.text)}</span></li>`}).join('');
+ const panel=`<div class="parch"><h3>照合簿 <small>${esc(d.reqNo||'番号なし')}</small></h3><div class="kv" style="font-size:13px;margin-bottom:6px">宛先：<b>${esc(d.dest||'記入なし')}</b>${ev.reqOk?'':'　<span style="color:#a11d1d">依頼番号が一致しない</span>'}</div>
+  <ul class="dl relay-list">${list||'<li><span class="stamp ng">空</span><span>何も書かれていない</span></li>'}</ul></div>${G.mode==='easy'?'<p class="muted" style="font-size:13px;margin:8px 4px">簡単モードでは、ここで書類を書き直せます。</p>':''}`;
+ vnSetup({top:topbar(`<b class="grow">${t.relay}</b>`),cast:[{who:'hans',pos:'l',svg:hansSVG()}],panel});show('s-vn',sceneOf('relay'));
+ const L=[['hans',`${t.depot}からの荷と${t.doc}だな。どれ、照合するか。`]];
+ if(!ev.reqOk)L.push(['hans',`ん？ 番号が${t.req}の写しと合わんぞ。向こうで照合に手間取るだろうな。`]);
+ ev.rows.forEach(r=>{const p=ev.proc[r.i];
+  if(p.reason==='unit')L.push(['hans',`「${p.it.name}」は単位が${t.catShort}と違う。数の意味が変わってしまうから、これは通せん。差し戻しだ。`]);
+  else if(p.reason==='nosize')L.push(['hans',`「${p.it.name}」に${SPEC()}が書いてない。これは通せん、差し戻しだ。`]);
+  else if(p.reason==='nonexist')L.push(['hans',`番号「${r.no||'空欄'}」…そんな物品は${t.catShort}にないぞ。`]);
+  else if(p.reason==='noqty')L.push(['hans',`「${p.it.name}」は数量が空欄だ。何も送れん。`]);
+  else if(p.status==='short')L.push(['hans',`「${p.it.name}」は、${t.stockWord}が足りなかったようだな。`])});
+ if(!ev.rows.length)L.push(['hans','…白紙じゃないか。これでは何も送れんぞ。']);
+ if(!ev.destOk&&d.dest)L.push(['hans',`宛先は「${d.dest}」か。よし、そっちへ回しておく。`]);else if(!ev.destOk)L.push(['hans','宛先が書いてない。とりあえず保管しておくしかないな。']);
+ else if(L.length===1)L.push(['hans',`書類と荷はぴったりだ。${t.front}へ回すぞ。`]);else L.push(['hans',`通せる分は${t.front}へ回しておく。`]);
+ L.push(['hans','中継の控えは、こっちの記録簿に綴じておくぞ。']);
+ await say(L);const o=[{key:'next',label:`荷を${t.front}へ送る`}];if(G.mode==='easy')o.push({key:'redo',label:'書類を書き直す（簡単モード）',dark:true});return choose(o);
+}
+
+/* ============ 中継地点の立場：照合 ============ */
+const DECIDE=['通過','差戻：物品違い','差戻：数量違い','差戻：単位違い','差戻：規格違い','差戻：現品不一致'];
+const ERR_REASON={item:'差戻：物品違い',qty:'差戻：数量違い',unit:'差戻：単位違い',size:'差戻：規格違い',nosize:'差戻：規格違い',count:'差戻：現品不一致'};
+const ERR_TEXT={item:'物品番号が請求と違う',qty:'数量が請求と違う',unit:'単位が目録と違う',size:'規格・サイズが請求と違う',nosize:'規格が書かれていない',count:'現品の数が伝票と合わない',dest:'宛先が請求と違う'};
+function genNpcDoc(){
+ const st=curStage(),rnd2=Math.random;
+ const rows=st.lines.map(l=>{const it=cat(l.no);return{no:l.no,size:it.sized?l.size:'—',qty:l.qty,unit:it.unit,goods:l.qty,err:null,line:l}});
+ let dest=st.dest,destErr=false;
+ const n=Math.min(G.m.errs,rows.length);const types=['unit','size','qty','item','count','nosize','dest'];
+ const idx=[...rows.keys()].sort(()=>rnd2()-.5);let applied=0,tries=0;
+ while(applied<n&&tries<40){tries++;const ty=types[Math.floor(rnd2()*types.length)];
+  if(ty==='dest'){if(destErr)continue;destErr=true;dest=SC.destinations.filter(x=>x!==st.dest)[Math.floor(rnd2()*(SC.destinations.length-1))];applied++;continue}
+  const k=idx.find(i=>!rows[i].err);if(k==null)break;const r=rows[k],it=cat(r.no);
+  if((ty==='size'||ty==='nosize')&&!it.sized)continue;
+  if(ty==='item'){const alt=SC.catalog.find(c=>c.like===r.no)||SC.catalog.find(c=>c.no!==r.no&&c.unit===it.unit&&!!c.sized===!!it.sized);if(!alt)continue;r.no=alt.no;if(!alt.sized)r.size='—'}
+  else if(ty==='unit'){const u=SC.units.filter(x=>x!=='—'&&x!==it.unit);r.unit=u[Math.floor(rnd2()*u.length)]}
+  else if(ty==='size'){const z=SC.sizes.filter(x=>x!=='—'&&x!==r.size);r.size=z[Math.floor(rnd2()*z.length)]}
+  else if(ty==='nosize')r.size='—';
+  else if(ty==='qty'){r.qty=r.qty>=20?r.qty*10:r.qty+Math.max(1,Math.round(r.qty*.5));r.goods=r.qty}
+  else if(ty==='count'){r.goods=Math.max(0,r.qty-Math.max(1,Math.round(r.qty*.3)))}
+  r.err=ty;applied++}
+ return{reqNo:st.reqNo,dest,destErr,rows};
+}
+function inspectScreen(){return new Promise(res=>{
+ const st=curStage(),t=TM(),N=genNpcDoc();G.npc=N;G.insp={dest:N.dest,dec:N.rows.map(()=>'')};
+ G.docResolve=res;
+ $('#s-doc').innerHTML=`${topbar(`<b>${t.relay}</b><span class="grow muted" style="font-size:14px">${t.req}・${t.doc}・現品を突き合わせ、行ごとに通過か差し戻しかを決める。</span>${G.m.timer?`<span class="hg" id="hg">${hourglass()}<b></b></span>`:''}<button class="btn wax" id="submitBtn">照合印を押して送る</button>`)}
+ ${G.m.guide?'<div class="omen win" id="guide"><span class="em">導</span><span id="guideText"></span></div>':''}
+ <div class="docgrid">
+  <div class="parch pinned"><h3>${t.req}の写し <small>${st.reqNo}</small></h3><table class="kv"><tr id="req-dest"><td>${SC.key==='delivery'?'お届け先':'受領場所'}</td><td><b>${esc(st.dest)}</b></td></tr><tr><td>依頼元</td><td>${esc(st.from||t.reqFrom)}</td></tr></table>
+   <table class="ptab" style="margin-top:10px"><thead><tr><th>行</th><th>品名・規格</th><th>数量</th></tr></thead><tbody>${st.lines.map((l,k)=>`<tr id="req-${k}"><td>${k+1}</td><td style="font-family:'Klee One',cursive;font-size:15px">${esc(l.label)}</td><td style="font-family:'Klee One',cursive;font-size:15px;white-space:nowrap">${esc(l.qtyText)}</td></tr>`).join('')}</tbody></table>
+   <div class="memo">${t.req}の数量は依頼元の言い方です。${t.doc}は${t.catShort}の単位で書かれているはず。</div></div>
+  <div class="parch"><h3>${t.doc}（${t.depot}作成） <small>${esc(N.reqNo)}</small></h3>
+   <div class="hdrf"><label>宛先（違っていれば訂正）<select id="i-dest">${SC.destinations.map(x=>`<option ${x===N.dest?'selected':''}>${x}</option>`).join('')}</select></label><label>現品の検数<div style="font-size:12.5px;font-weight:500">荷を数えた結果を右端の列に記録済み</div></label></div>
+   <table class="ptab"><thead><tr><th>行</th><th>番号・品名</th><th>${SPEC()}</th><th>数量</th><th>現品</th><th>判断</th></tr></thead><tbody>
+   ${N.rows.map((r,k)=>{const it=cat(r.no);return `<tr id="ins-${k}"><td>${k+1}</td><td><span style="font-family:'Klee One',cursive;color:var(--ink-blue);font-weight:600">${r.no}</span><br><small>${esc(it?it.name:'該当なし')}</small></td><td style="font-family:'Klee One',cursive;color:var(--ink-blue)">${esc(r.size)}</td><td style="font-family:'Klee One',cursive;color:var(--ink-blue);white-space:nowrap">${r.qty}${esc(r.unit)}</td><td style="white-space:nowrap"><b>${r.goods}</b></td>
+    <td style="min-width:150px"><select id="dec-${k}" data-k="${k}"><option value="">判断する</option>${DECIDE.map(x=>`<option>${x}</option>`).join('')}</select></td></tr>`}).join('')}</tbody></table>
+   <div class="note">照合の順番：①番号と${SPEC()}は${t.req}と同じか　②数量は${t.req}どおりか（単位の換算に注意）　③単位は${t.catShort}と同じか　④数えた現品の数は${t.doc}の数量と同じか　⑤宛先は${t.req}と同じか</div></div>
+  ${catalogPanel()}</div>`;
+ show('s-doc',sceneOf('relay'));
+ $('#i-dest').onchange=e=>{G.insp.dest=e.target.value;inspGuide()};
+ N.rows.forEach((_,k)=>$('#dec-'+k).onchange=e=>{G.insp.dec[k]=e.target.value;inspGuide()});
+ $('#submitBtn').onclick=()=>submitInspect(false);inspGuide();startTimer(()=>submitInspect(true));
+ if(T.auto){(T.inspect||(()=>{G.insp.dest=curStage().dest;G.npc.rows.forEach((r,k)=>G.insp.dec[k]=r.err?ERR_REASON[r.err]:'通過')}))();submitInspect(false)}
+})}
+function inspGuide(){if(!G.m.guide||!$('#guide'))return;document.querySelectorAll('.guide').forEach(e=>e.classList.remove('guide'));document.querySelectorAll('.guide-row').forEach(e=>e.classList.remove('guide-row'));
+ const N=G.npc,st=curStage();let g=null;
+ for(let k=0;k<N.rows.length&&!g;k++){const r=N.rows[k],want=r.err?ERR_REASON[r.err]:'通過';if(G.insp.dec[k]!==want){const hint={null:`${k+1}行目：${TM().req}・${TM().catShort}・現品のどれとも食い違いがありません。`,item:`${k+1}行目：番号と品名を、${TM().req}の品名と見比べましょう。`,qty:`${k+1}行目：数量を${TM().req}の数量と見比べましょう。`,unit:`${k+1}行目：単位を${TM().catShort}の単位と見比べましょう。`,size:`${k+1}行目：${SPEC()}を${TM().req}と見比べましょう。`,nosize:`${k+1}行目：${SPEC()}の欄を確かめましょう。`,count:`${k+1}行目：数えた現品の数と、${TM().doc}の数量を見比べましょう。`}[r.err];g={el:'#dec-'+k,req:'#req-'+st.lines.indexOf(r.line),msg:`${hint}判断は「${want}」です。`}}}
+ if(!g&&G.insp.dest!==st.dest)g={el:'#i-dest',req:'#req-dest',msg:`宛先が${TM().req}と違います。「${st.dest}」に訂正しましょう。`};
+ const bar=$('#guide');if(!g){bar.classList.add('ok');$('#guideText').textContent='すべて正しく判断できました。「照合印を押して送る」を押しましょう。';$('#submitBtn').classList.add('guide');return}
+ bar.classList.remove('ok');$('#guideText').textContent=g.msg;const el=$(g.el);if(el)el.classList.add('guide');const q=$(g.req);if(q)q.classList.add('guide-row')}
+function submitInspect(timeUp){
+ clearInterval(G.timerId);if(!$('#s-doc').classList.contains('active')||G.submitting)return;G.submitting=true;
+ const elapsed=Math.round((Date.now()-G.docStart)/1000);G.cur={elapsed,timeUp};G.totalDocTime+=elapsed;
+ const N=G.npc,t=TM();const rows=N.rows.map((r,k)=>`<tr><td>${k+1}</td><td>${esc(keyLabel(r.no))}</td><td>${esc(G.insp.dec[k]||'通過')}</td></tr>`).join('');
+ playSign({title:'照合記録',sub:`${esc(N.reqNo)}　宛先 ${esc(G.insp.dest)}`,rows,signer:`${t.relay} 照合者`,path:SIG_ME,seal:['照','合'],caps:[timeUp?'時間切れ。判断はここまでで締める…':'照合記録に署名している…','照合印を押す',`通した荷を${t.front}へ送る`]},()=>{G.submitting=false;const r=G.docResolve;G.docResolve=null;r&&r()});
+}
+function applyInspection(){
+ const N=G.npc,st=curStage(),destOk=G.insp.dest===st.dest;let correct=0,total=N.rows.length*2+1;if(destOk)correct++;
+ const arrivals=[],returned=[],issues=[],judge=[];
+ N.rows.forEach((r,k)=>{const dec=G.insp.dec[k]||'通過',want=r.err?ERR_REASON[r.err]:'通過',passed=dec==='通過',it=cat(r.no),l=r.line,lit=cat(l.no);
+  const okDecision=passed===(!r.err),okReason=dec===want;if(okDecision)correct++;if(okReason)correct++;let effect;
+  if(!r.err&&passed){const key=lineKey(l);arrivals.push({key,give:l.qty,it:lit});effect='正しく通過し、届いた'}
+  else if(!r.err&&!passed){returned.push(lit.name);issues.push(`正しい行「${lit.name}」を差し戻した → 未着で再出荷待ち`);effect='問題のない行を差し戻したため、届かなかった'}
+  else if(r.err&&!passed){const key=lineKey(l);arrivals.push({key,give:l.qty,it:lit});returned.push(lit.name+'（誤った伝票）');effect=`誤りを見つけて差し戻し、${TM().depot}が正しく出し直して間に合った`}
+  else{// 誤りを見逃した
+   if(r.err==='item'){arrivals.push({key:it.sized?it.no+'|'+r.size:it.no,give:r.qty,it});effect=`誤った物品「${it.name}」がそのまま届いた`}
+   else if(r.err==='qty'){arrivals.push({key:lineKey(l),give:r.qty,it:lit});effect=`請求と違う数（${r.qty}）がそのまま届いた`}
+   else if(r.err==='size'){arrivals.push({key:it.no+'|'+r.size,give:r.qty,it});effect=`${SPEC()}「${r.size}」のまま届き、使えない`}
+   else if(r.err==='nosize'){effect=`${SPEC()}のない荷は${TM().front}で受け取りを断られ、届かなかった`}
+   else if(r.err==='unit'){arrivals.push({key:lineKey(l),give:l.qty,it:lit});effect='物は届いたが、伝票の単位が違うので受領書と照合できない'}
+   else if(r.err==='count'){arrivals.push({key:lineKey(l),give:r.goods,it:lit});effect=`伝票は${r.qty}なのに現品は${r.goods}しか届かず、差が行方不明になった`}
+   issues.push(`「${lit.name}」：${ERR_TEXT[r.err]}のを見逃した → ${effect}`)}
+  judge.push({r,dec,want,okDecision,okReason,effect})});
+ if(!destOk)issues.push(N.destErr?'宛先の誤りを訂正しなかった → 荷が別の拠点へ':'正しい宛先を書き換えてしまった → 荷が別の拠点へ');
+ if(destOk)arrivals.forEach(a=>{G.inv[a.key]=inv(a.key)+a.give});
+ Object.assign(G.cur,{reqOk:true,destOk,destName:G.insp.dest,arrivals:destOk?arrivals:[],returned,issues,correct,total,judge,
+  relayList:judge.map(j=>({status:j.dec==='通過'?'ok':'returned',text:j.effect}))});
+}
+
+/* ============ 前線の立場：請求の評価と受領確認 ============ */
+function applyRequest(){
+ const st=curStage(),d=G.doc;
+ const rows=d.rows.map((r,i)=>({no:norm(r.no),size:r.size,qty:String(r.qty).trim()===''?null:parseInt(r.qty,10),unit:r.unit,i})).filter(r=>r.no!==''||r.qty!==null);
+ const destOk=d.dest===st.dest;let fOk=destOk?1:0,fTot=1;const fmtIssues=[];
+ rows.forEach(r=>{const it=cat(r.no);fTot+=2;if(!it){fmtIssues.push(`番号「${r.no}」は${TM().catShort}にない`);return}
+  if(r.unit===it.unit)fOk++;else fmtIssues.push(`「${it.name}」の単位「${r.unit}」は${TM().catShort}の「${it.unit}」と違う`);
+  const sz=it.sized?SC.sizes.includes(r.size)&&r.size!=='—':r.size==='—';if(sz)fOk++;else fmtIssues.push(it.sized?`「${it.name}」に${SPEC()}が書かれていない`:`「${it.name}」は${SPEC()}不要なのに記入がある`)});
+ if(!destOk)fmtIssues.push(`受領場所が「${d.dest||'未記入'}」になっている（正しくは「${st.dest}」）`);
+ const used=new Set();const cov=st.lines.map(l=>{const it=cat(l.no);const ms=rows.filter(r=>r.no===l.no&&(!it.sized||r.size===l.size));ms.forEach(m=>used.add(m.i));const q=ms.reduce((a,m)=>a+(m.qty||0),0),ratio=q/l.qty;
+  const sc=ratio>=.8&&ratio<=1.5?1:(ratio>=.5&&ratio<=2.5?.5:0);return{l,it,q,ratio,sc}});
+ const extras=rows.filter(r=>!used.has(r.i));let covScore=cov.reduce((a,c)=>a+c.sc,0)/cov.length;covScore=Math.max(0,covScore-.05*extras.length);
+ const ev={reqOk:true,destOk,rows:rows,proc:{}};rows.forEach(r=>{ev.proc[r.i]=processRow(r,destOk)});
+ const procs=rows.map(r=>ev.proc[r.i]);
+ let arrivals=destOk?procs.filter(p=>(p.status==='ok'||p.status==='short')&&p.give>0).map(p=>({key:p.key,give:p.give,it:p.it})):[];
+ // 受領確認のための食い違いを1つ仕込む
+ let disc=null;if(arrivals.length&&(G.mode!=='easy'||Math.random()<.7)){const cand=arrivals.filter(a=>st.lines.some(l=>lineKey(l)===a.key));if(cand.length){const a=cand[Math.floor(Math.random()*cand.length)],no=a.key.split('|')[0],it=cat(no);
+  const alt=SC.catalog.find(c=>c.like===no);let nk=a.key,ng=a.give,kind;
+  if(it.sized&&Math.random()<.5){const z=SC.sizes.filter(x=>x!=='—'&&x!==a.key.split('|')[1]);nk=no+'|'+z[0];kind=`${SPEC()}違い`}
+  else if(alt&&Math.random()<.5){nk=alt.sized?alt.no+'|'+a.key.split('|')[1]:alt.no;kind='物品違い'}
+  else{ng=Math.max(1,Math.round(a.give*.6));kind='数量不足'}
+  if(nk!==a.key||ng!==a.give){take(a.key,a.give);G.inv[nk]=inv(nk)+ng;disc={from:{...a},to:{key:nk,give:ng,it:cat(nk.split('|')[0])},kind};a.key=nk;a.give=ng;a.it=cat(nk.split('|')[0]);a.disc=true}}}
+ Object.assign(G.cur,{reqOk:true,destOk,destName:d.dest,arrivals,returned:procs.filter(p=>p.status==='returned'||p.status==='none').map(p=>p.it?p.it.name:'不明な物品'),relayList:procs,
+  req:{rows,cov,extras,covScore,fOk,fTot,fmtIssues},disc,checks:arrivals.map(()=>'一致'),issues:[]});
+}
+
+/* ============ 前線の受付 ============ */
+function frontPanel(revisit){
+ const t=TM(),invKeys=Object.keys(G.inv).filter(k=>G.inv[k]>0).sort();
+ const slot=k=>{const[no,z]=k.split('|'),it=cat(no),n=G.inv[k];let act='';
+  if(SC.kind==='battle'){
+   if(it.kind==='armor'){const need=SC.squadSize[no],sl=no===VEST?'vest':'mantle';act=G.equip[sl]?'<span class="muted">着用中（予備）</span>':z!==need?`<span class="st-ng">サイズが合わない（${need}が必要）</span>`:`<button class="btn sm" data-equip="${k}">受け取って着る</button>`}
+   else if(no===RR)act=G.equip.rr?'<span class="muted">携行中（予備）</span>':`<button class="btn sm" data-equip="${k}">受け取って担ぐ</button>`;
+   else if(no===RIFLE)act='<span class="muted">予備の小銃</span>';
+   else if(no===RATION)act=`<button class="btn sm" data-use="${k}" ${G.buff.rations>=3?'disabled':''}>食べる</button>`;
+   else if(no===POTION)act=`<button class="btn sm" data-use="${k}" ${G.buff.potions>=2?'disabled':''}>飲む</button>`;
+   else if(no===HOLY)act=G.buff.holy?'<span class="st-ok">加護を受けた</span>':`<button class="btn sm" data-use="${k}">身を清める</button>`;
+   else if(it.trap)act=`<span class="st-ng">${it.trap}</span>`;else act='<span class="muted">戦闘で使う</span>'}
+  else act=it.trap?`<span class="st-ng">${it.trap}</span>`:`<span class="muted">${SC.key==='delivery'?'配達に持ち出す':'店頭に並べる'}</span>`;
+  return `<div class="slot"><div class="ic">${iconOf(no)}</div><div class="nm">${esc(keyLabel(k))}　×${n}<small>${esc(it.note||'')}</small></div><div class="ac">${act}</div></div>`};
+ const s=SC.kind==='battle'?squadStats():null;
+ const check=G.role==='front'&&!revisit&&G.cur.arrivals.length?`<div class="parch" style="margin-top:12px;padding:14px 16px"><h3>受領確認 <small>請求と着荷を見比べ、食い違いがあれば「相違あり」に</small></h3><table class="ptab"><thead><tr><th>着荷</th><th>数量</th><th>確認</th></tr></thead><tbody>
+  ${G.cur.arrivals.map((a,i)=>`<tr id="chk-row-${i}"><td>${esc(keyLabel(a.key))}</td><td>${a.give}${a.it.unit}</td><td><select id="chk-${i}" data-i="${i}"><option ${G.cur.checks[i]==='一致'?'selected':''}>一致</option><option ${G.cur.checks[i]==='相違あり'?'selected':''}>相違あり</option></select></td></tr>`).join('')}</tbody></table>
+  <p style="font-size:12.5px;margin:6px 0 0">あなたの${t.req}：${G.cur.req.rows.map(r=>`${esc(keyLabel(r.size&&r.size!=='—'?r.no+'|'+r.size:r.no))}×${r.qty??'?'}${esc(r.unit)}`).join('、')||'なし'}</p></div>`:'';
+ return `<div class="win"><h3>${SC.kind==='battle'?'補給受付台':t.front+'の受付'}　<small class="muted" style="font-weight:500">${esc(curStage().dest)}</small></h3>
+  ${s?`<div class="stats"><div>最大HP<b>${s.maxHp}</b></div><div>攻撃<b>${s.atk}%</b></div><div>防御<b>${s.def}</b></div><div>加護<b>${G.buff.holy?'あり':'なし'}</b></div></div>
+  <div class="equips"><span class="${G.equip.rifle?'on':''}">小銃（A型）</span><span class="${G.equip.rr?'on':''}">無反動砲</span><span class="${G.equip.vest?'on':''}">防弾チョッキ</span><span class="${G.equip.mantle?'on':''}">耐火マント</span></div>`:''}
+  <div class="slots">${invKeys.length?invKeys.map(slot).join(''):'<p class="muted">受付台には何もない。</p>'}</div>${check}
+  <div class="row" style="margin-top:14px">${SC.kind==='battle'?'<button class="btn dark sm" id="autoPrep">おまかせで受け取る</button>':''}<span class="grow"></span>
+   ${G.mode==='easy'&&!revisit?`<button class="btn dark sm" id="redoDoc">${G.role==='relay'?'照合をやり直す':'書類を書き直す'}</button>`:''}
+   <button class="btn ${revisit?'':'wax'}" id="frontNext">${revisit?(SC.kind==='battle'?'敵のもとへ戻る':'準備に戻る'):'受領書にサインする'}</button></div></div>`}
+function frontReactions(){
+ const t=TM(),st=curStage(),ck=carrierKey(),L=[],recv='mirei';const isB=SC.kind==='battle';const by=isB?ck:recv;
+ if(!G.cur.destOk){L.push([recv,isB?`ごめんなさい、レオンさん……今回の補給品、こちらには届いていないんです。`:`今回の荷物、こちらに届いていないんです……「${G.cur.destName||'宛先なし'}」に行ってしまったみたいで。`]);L.push([ck,isB?'なんだって？ 別の拠点に行っちまったのか……手持ちでやるしかないな。':'えっ、じゃあ今日の分が足りないぞ……']);return L}
+ const arr=G.cur.arrivals;L.push([recv,arr.length?(isB?'レオンさん、補給所から荷が届いてますよ！ 持っていく物を選んでくださいね。':`荷物、届きました！ 中身を確認しますね。`):'今回は、届いた荷がひとつもなかったみたいです……']);
+ if(G.cur.returned.length)L.push([recv,`ただ……「${G.cur.returned.join('」「')}」は${t.relay}で差し戻しになったそうです。`]);
+ arr.forEach(a=>{const[no,z]=a.key.split('|');const it=cat(no);
+  if(isB&&SC.squadSize[no]&&z!==SC.squadSize[no])L.push([ck,`${it.name}が${z}サイズ？ 俺は${SC.squadSize[no]}だ。これじゃ着られないな……`]);
+  const want=st.lines.find(l=>l.no===no||cat(l.no).like===no||it.like===l.no);
+  if(!isB&&want&&it.sized&&want.no===no&&want.size&&z!==want.size&&!st.lines.some(l=>lineKey(l)===a.key))L.push([by,`「${it.name}」が${z}で届いてます。依頼は${want.size}でした……`]);
+  if(it.trap&&!st.lines.some(l=>l.no===no))L.push([by,isB?({[OLD_AMMO]:'7.62mm弾？ 俺の小銃じゃ撃てないぞ……',[OIL]:'聖油……？ 頼んだのは聖水なんだが。',[BAND]:'包帯だけか。救急品セットが欲しかったんだが……'}[no]||`「${it.name}」？ 頼んだ物と違うな。`):`「${it.name}」？ 依頼していたのは別の商品なんですけど……`])});
+ st.lines.forEach(l=>{const k=lineKey(l);const a=arr.find(x=>x.key===k);if(a&&a.give<l.qty)L.push([by,`「${keyLabel(k)}」、頼んだ数より少ないな……`])});
+ return L}
+function frontScreen(revisit){
+ const st=curStage(),t=TM(),ck=carrierKey();
+ vnSetup({top:topbar(`<b class="grow">${t.front}　${esc(st.dest)}</b>`),cast:[{who:'mirei',pos:'l',svg:mireiSVG(true)},{who:ck,pos:'c',svg:carrierSVG()}],panel:frontPanel(revisit)});show('s-vn',sceneOf('front'));
+ return new Promise(res=>{
+  const bind=()=>{const P=$('#vnPanel');const re=()=>{P.innerHTML=frontPanel(revisit);bind()};
+   P.querySelectorAll('[data-equip]').forEach(b=>b.onclick=()=>{equipItem(b.dataset.equip);re()});P.querySelectorAll('[data-use]').forEach(b=>b.onclick=()=>{useItem(b.dataset.use);re()});
+   P.querySelectorAll('[id^="chk-"]').forEach(s=>{if(s.tagName==='SELECT')s.onchange=()=>{G.cur.checks[+s.dataset.i]=s.value}});
+   const ap=$('#autoPrep');if(ap)ap.onclick=()=>{autoPrep();re()};const rd=$('#redoDoc');if(rd)rd.onclick=()=>res('redo');$('#frontNext').onclick=()=>{if(!revisit&&G.role==='front')settleChecks();res('next')}};
+  bind();
+  if(G.m.guide&&G.role==='front'&&!revisit&&G.cur.disc){const i=G.cur.arrivals.findIndex(a=>a.disc);const r=$('#chk-row-'+i);if(r)r.classList.add('guide-row')}
+  if(T.auto){if(G.role==='front'&&!revisit){(T.check||(()=>{G.cur.checks=G.cur.arrivals.map(a=>a.disc?'相違あり':'一致')}))();settleChecks()}if(SC.kind==='battle')autoPrep();res('next');return}
+  const L=revisit?[['mirei','忘れ物ですか？ ゆっくり選んでいってくださいね。']]:frontReactions();
+  if(!revisit&&G.role==='front'&&G.cur.arrivals.length)L.push(['mirei',`受け取る前に、${t.req}と見比べて確認してくださいね。違っていたら「相違あり」に。`]);
+  L.push(['mirei',revisit?'準備ができたら声をかけてくださいね。':'確認が済んだら、受領書にサインをお願いします！']);say(L);
+ })}
+function settleChecks(){const C=G.cur;if(C.settled)return;C.settled=true;let ok=0;const n=C.arrivals.length;C.checkRes=[];
+ C.arrivals.forEach((a,i)=>{const said=C.checks[i]==='相違あり',right=said===!!a.disc;if(right)ok++;C.checkRes.push({a,said,right})});
+ C.checkScore=n?ok/n:1;
+ if(C.disc){const i=C.arrivals.findIndex(a=>a.disc);if(C.checks[i]==='相違あり'){take(C.disc.to.key,C.disc.to.give);G.inv[C.disc.from.key]=inv(C.disc.from.key)+C.disc.from.give;if(SC.kind==='battle'){const fk=C.disc.from.key,fn=fk.split('|')[0],E=SC.enemies[curStage().enemy];equipItem(fk);if(fn===HOLY&&(E.traits.includes('undead')||E.traits.includes('dark')))useItem(HOLY)}C.issues.push(`${C.disc.kind}に気づいて「相違あり」で受領 → 正しい物品と交換できた`)}
+  else C.issues.push(`${C.disc.kind}（${keyLabel(C.disc.to.key)}）を「一致」で受け取った → 受領書と現品が合わず、後の棚卸で発覚`)}
+ C.arrivals.forEach((a,i)=>{if(!a.disc&&C.checks[i]==='相違あり')C.issues.push(`問題のない「${keyLabel(a.key)}」を相違ありとした → 確認のやり直しで手間が増えた`)});
+ C.req.fmtIssues.forEach(x=>C.issues.push(x));
+ C.req.cov.forEach(c=>{if(c.sc<1)C.issues.push(c.q===0?`「${keyLabel(lineKey(c.l))}」を請求しなかった`:`「${keyLabel(lineKey(c.l))}」の請求数（${c.q}）が見込み（${c.l.qty}）から外れていた`)});
+}
+function signReceipt(){
+ const arr=G.cur.arrivals,t=TM();
+ const rows=arr.length?arr.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(keyLabel(p.key))}</td><td>${p.give}${p.it.unit}</td>${G.role==='front'?`<td>${esc(G.cur.checks[i]||'一致')}</td>`:''}</tr>`).join(''):`<tr><td></td><td>受領した物品なし（${G.cur.destOk?'差し戻し':'未着'}）</td></tr>`;
+ return new Promise(res=>playSign({title:'受領書',sub:`${esc(G.role==='relay'?G.npc.reqNo:G.doc.reqNo||'番号なし')}　${esc(curStage().dest)}`,rows,signer:t.receiptBy,path:SIG_LEON,seal:['受','領'],caps:[`${t.signer}が受領書にサインしている…`,'受領印を押す',`${t.courier}が受領書を${t.depot}へ持ち帰る`]},res));
+}
+
+/* ============ 書類の行方 ============ */
+function trailScreen(){
+ const C=G.cur,st=curStage(),t=TM();const ret=C.returned||[],issues=C.issues||[];
+ const col=[[],[],[]];let n=0;const card=(lane,title,desc,stamp,cls)=>col[lane].push(`<div class="pcard parch" style="animation-delay:${(n++)*.4}s"><span class="stamp ${cls}">${stamp}</span><b>${title}</b><p>${desc}</p></div>`);
+ if(G.role==='front')card(2,`${t.req}（控え）`,`${t.front}で書いて${t.depot}へ送った。控えは手元の請求綴りへ`,'請求','ok');
+ card(0,`${t.doc}を3枚複写で作成`,`原本・${t.relay}控え・${t.depot}控えの3枚。封をして荷と送り出した`,'発送','ok');
+ card(0,`第3片　${t.depot}控え`,'未決箱に入れ、受領書が戻るのを待つ','未決','w');
+ card(1,`第2片　${t.relay}控え`,G.role==='relay'?'あなたが1行ずつ照合し、照合印を押して記録簿に綴じた':'荷と1行ずつ照合し、記録簿に綴じた','綴込','ok');
+ if(ret.length)card(1,'差戻し票',`${ret.length}行を差し戻し、理由を書いて${t.depot}へ返送した`,'差戻','ng');
+ if(C.destOk){card(2,'第1片　原本',`荷と一緒に「${esc(st.dest)}」の受付へ。${t.signer}が署名して受領書になった`,'受領','ok');card(2,'受領書',`${t.courier}が${t.depot}へ持ち帰った`,'返送','ok')}
+ else card(2,'第1片　原本',`荷と一緒に「${esc(C.destName||'宛先なし')}」へ運ばれた。宛先違いの荷として保留され、届いていない`,'保留','ng');
+ if(ret.length)card(0,'差戻し票を受付','差し戻された物品は棚に戻し、出し直しを待つ','再処理','w');
+ if(C.reqOk===false)card(0,'番号の不一致','控え・受領書・依頼書の番号が合わず、綴りを探すのに手間取った','照合遅延','w');
+ let fin;
+ if(!C.destOk){card(0,'受領書が戻らない','控えは未決箱に残ったまま。誤送先への問い合わせと調査が必要','未完結','ng');fin=`<b>この取引は完結していません。</b> 宛先の誤りで荷は別の拠点へ渡り、受領書も戻りません。控えは「未決」のまま残り、誤送の調査と出し直しが必要です。`}
+ else if(!issues.length){card(0,'控えと受領書を照合',`${t.req}・控え・受領書がすべて一致。綴りに綴じた`,'完結','ok');fin=`<b>この取引は完結しました。</b> 3枚の書類がそろって一致し、${t.depot}の綴り（${esc(st.date)}分）に収まりました。`}
+ else{card(0,'控えと受領書を照合','書類と現品が一致しない。調査票を起こした','要調査','ng');fin=`<b>照合が合わず、調査票が起こされました。</b><ul>${issues.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`}
+ const third=C.destOk?t.front:'誤送先';
+ $('#s-trail').innerHTML=`${topbar('<b class="grow">書類の行方</b>')}
+  <div class="lanes"><div class="lane"><h3>${t.depot}</h3><div class="cards">${col[0].join('')}</div></div><div class="lane"><h3>${t.relay}</h3><div class="cards">${col[1].join('')}</div></div><div class="lane"><h3>${third}</h3><div class="cards">${col[2].join('')}</div></div></div>
+  <div class="win trail-sum" style="animation-delay:${n*.4}s">${fin}<div class="row" style="margin-top:12px"><span class="grow"></span><button class="btn" id="toEnemy">${SC.kind==='battle'?'レオンを敵のもとへ向かわせる':(SC.key==='delivery'?'配達の準備へ':'開店の準備へ')}</button></div></div>`;
+ show('s-trail','depot');
+ if(T.auto)return Promise.resolve();return new Promise(r=>$('#toEnemy').onclick=r);
+}
+
+/* ============ 遭遇（戦闘）・営業／配達 ============ */
+async function encounter(){
+ const st=curStage(),t=TM();
+ if(SC.kind==='battle'){const k=st.enemy,E=SC.enemies[k];
+  vnSetup({top:topbar(`<b class="grow">${esc(st.dest)}の先</b>`),cast:[{who:'leon',pos:'l',svg:leonSVG()},{who:k,pos:'r',monster:k,svg:monsterSVG(k)}]});show('s-vn',stageScene());
+  await say([['nar',`前方に${E.name}がいる。こちらにはまだ気づいていない。`]]);
+  const a=await choose([{key:'talk',label:`${E.name}に話しかける`},{key:'back',label:'まだ話しかけない（受付に戻って準備する）',dark:true}]);if(a==='back')return'back';
+  await say([['leon',ENEMY_TALK[k][0]],[k,ENEMY_TALK[k][1]],['leon','来るぞ。構えろ！']]);
+  return choose([{key:'auto',label:'戦う（小隊にまかせる：自動戦闘）'},{key:'manual',label:'戦う（自分で指揮する：手動戦闘）'}])}
+ const ck=carrierKey(),del=SC.key==='delivery';
+ vnSetup({top:topbar(`<b class="grow">${esc(st.dest)}</b>`),cast:[{who:'mirei',pos:'l',svg:mireiSVG(false)},{who:ck,pos:'c',svg:carrierSVG()}]});show('s-vn',sceneOf('front'));
+ await say([['nar',del?`${st.dest}の配達先が、荷物を待っている。`:`${st.title}。開店前から、お客さんが並び始めている。`],[del?ck:'mirei',del?'荷物、全部積んだ。出発するか？':'棚の準備、できました。開けますか？']]);
+ const a=await choose([{key:'go',label:del?'配達に出発する':'開店する'},{key:'back',label:del?'まだ出ない（営業所に戻る）':'まだ開けない（受付に戻る）',dark:true}]);return a==='back'?'back':'go';
+}
+function outcomeScreen(){
+ const st=curStage(),t=TM(),del=SC.key==='delivery';let tot=0,ok=0;const rows=[];
+ st.lines.forEach(l=>{const key=lineKey(l),have=inv(key),f=Math.min(have,l.qty);take(key,f);tot+=l.qty;ok+=f;rows.push({l,key,f,miss:l.qty-f})});
+ const wrong=(G.cur.arrivals||[]).filter(a=>!st.lines.some(l=>lineKey(l)===a.key));
+ const rate=tot?ok/tot:0,win=rate>=G.m.pass;
+ G.B={win,turn:0,used:{},rate,rows,wrong,over:true};
+ const people=n=>Array.from({length:Math.min(n,30)},(_,i)=>`<span class="pp" style="animation-delay:${i*.04}s">●</span>`).join('');
+ $('#s-battle').innerHTML=`${topbar(`<b class="grow">${del?'配達':'営業'}　${esc(st.dest)}</b>`)}
+  <div class="win" style="max-width:980px;margin:0 auto"><h3>${del?'配達の結果':'今日の売り場'}</h3>
+  <table class="ptab outc"><thead><tr><th>${del?'荷物':'商品'}</th><th>${del?'届け先の数':'買いに来た数'}</th><th>${del?'配達完了':'売れた'}</th><th>${del?'未配達':'品切れ'}</th><th></th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${esc(keyLabel(r.key))}</td><td>${r.l.qty}</td><td class="st-ok">${r.f}</td><td class="${r.miss?'st-ng':''}">${r.miss}</td><td class="ppl"><span class="ok">${people(Math.round(r.f/r.l.qty*10))}</span><span class="ng">${people(10-Math.round(r.f/r.l.qty*10))}</span></td></tr>`).join('')}</tbody></table>
+  ${wrong.length?`<p class="st-ng" style="margin:10px 0 0">${del?'区分・温度帯の違う荷物（事故扱い）':'依頼と違う商品（返品扱い）'}：${wrong.map(a=>`${esc(keyLabel(a.key))}×${a.give}`).join('、')}</p>`:''}
+  <div class="result"><h2 style="color:${win?'var(--good)':'var(--bad)'}">${Math.round(rate*100)}%　${win?'目標達成':'目標未達'}</h2><p class="muted" style="margin:0">目標は${Math.round(G.m.pass*100)}%以上</p><button class="btn" id="toDebrief" style="margin-top:10px">${t.report}を見る</button></div></div>`;
+ show('s-battle',sceneOf('front'));recordResult(win);
+ $('#toDebrief').onclick=renderDebrief;if(T.auto)setTimeout(renderDebrief,0);
+}
+function recordResult(win){
+ const C=G.cur;let accPts;
+ if(G.role==='depot')accPts=Math.round(C.ev.correct/C.ev.total*80);
+ else if(G.role==='relay')accPts=Math.round(C.correct/C.total*80);
+ else accPts=Math.round(25*(C.req.fOk/C.req.fTot)+35*C.req.covScore+20*(C.checkScore??1));
+ const timePts=G.m.timer?(C.timeUp?0:Math.round(10*Math.min(1,(G.m.timer-C.elapsed)/(G.m.timer*0.5)))):10;
+ const battlePts=win?10:0,total=accPts+timePts+battlePts;
+ Music.jingle(win);G.results[G.stageIdx]={win,accPts,timePts,battlePts,total,rank:rankOf(total),elapsed:C.elapsed,enemy:SC.kind==='battle'?SC.enemies[curStage().enemy].name:curStage().title};
+}
+
+function equipItem(k){const[no,z]=k.split('|');
+ if(no===VEST&&!G.equip.vest&&z===SC.squadSize[VEST]){G.equip.vest=true;take(k,1)}
+ else if(no===MANTLE&&!G.equip.mantle&&z===SC.squadSize[MANTLE]){G.equip.mantle=true;take(k,1)}
+ else if(no===RR&&!G.equip.rr){G.equip.rr=true;take(k,1)}}
+function useItem(k){
+ if(k===RATION&&G.buff.rations<3&&inv(k)){G.buff.rations++;G.buff.hpPlus+=15;take(k,1)}
+ else if(k===POTION&&G.buff.potions<2&&inv(k)){G.buff.potions++;G.buff.atkMul+=0.2;take(k,1)}
+ else if(k===HOLY&&!G.buff.holy&&inv(k)){G.buff.holy=true;take(k,1)}}
+function autoPrep(){
+ Object.keys(G.inv).forEach(k=>{if(G.inv[k]>0)equipItem(k)});
+ const E=SC.enemies[curStage().enemy];
+ if(E.traits.includes('undead')||E.traits.includes('dark'))useItem(HOLY);
+ while(G.buff.rations<3&&inv(RATION))useItem(RATION);
+ while(G.buff.potions<2&&inv(POTION))useItem(POTION);
+}
+
+/* ============ 戦闘 ============ */
+const ACTIONS={
+ rifle:{label:'小銃射撃',sub:'弾10発',can:()=>G.equip.rifle&&inv(RIFLE_AMMO)>=10,run:()=>{take(RIFLE_AMMO,10);G.B.used.rifle+=10;hit(18,'rifle','小銃で射撃（-10発）')}},
+ rr:{label:'無反動砲',sub:'砲弾1発',can:()=>G.equip.rr&&inv(RR_AMMO)>=1,run:()=>{take(RR_AMMO,1);G.B.used.rr++;hit(75,'rr','無反動砲を放つ')}},
+ gren:{label:'手榴弾',sub:'1個',can:()=>inv(GREN)>=1,run:()=>{take(GREN,1);G.B.used.gren++;hit(35,'gren','手榴弾を投げる')}},
+ med:{label:'救急品セット',sub:'HP+45',can:()=>inv(MED)>=1,run:()=>{take(MED,1);G.B.used.med++;heal(45,'救急品セットで手当て')}},
+ band:{label:'包帯',sub:'HP+12',can:()=>inv(BAND)>=1,run:()=>{take(BAND,1);heal(12,'包帯で手当て')}},
+ melee:{label:'銃剣格闘',sub:'弾を使わない',can:()=>true,run:()=>hit(7,'melee','銃剣で斬りかかる')},
+};
+function startBattle(auto){
+ const st=curStage(),E=SC.enemies[st.enemy],mul=G.m.enemyMul,s=squadStats();
+ G.B={auto,hp:s.maxHp,maxHp:s.maxHp,def:s.def,e:Object.assign({},E,{key:st.enemy,hp:Math.round(E.hp*mul),maxHp:Math.round(E.hp*mul),atk:E.atk*mul}),eTurn:0,turn:0,over:false,busy:false,used:{rifle:0,rr:0,gren:0,med:0},logs:[]};
+ renderBattleShell();show('s-battle',stageScene());renderBattle();
+ log(`${E.name}が現れた。`,'s');
+ if(G.cur.reqOk===false){log('請求番号の書き損じで受領照合に手間取った。敵の先制攻撃。','s');enemyAct();enemyAct();renderBattle()}
+ if(checkEnd())return;
+ if(auto)setTimeout(autoStep,SPEED);
+}
+function log(t,c){G.B.logs.push({t,c});const L=$('#blog');if(L){const d=document.createElement('div');d.className=c||'';d.textContent=t;L.appendChild(d);L.scrollTop=L.scrollHeight}}
+function popup(target,text,cls){const host=target==='e'?$('#field'):$('#ustat');if(!host)return;const d=document.createElement('div');d.className='dmg '+(cls||'');d.textContent=text;
+ if(target==='e'){d.style.left=`calc(50% + ${rnd(-80,60)}px)`;d.style.top=`${rnd(30,55)}%`}else{d.style.right='24px';d.style.top='10px'}host.appendChild(d);setTimeout(()=>d.remove(),1000)}
+function boom(small){const f=$('#field');if(!f)return;const b=document.createElement('div');b.className='boom'+(small?' small':'');b.style.left=`calc(50% - ${small?55:110}px + ${rnd(-40,40)}px)`;b.style.top=`${rnd(25,45)}%`;f.appendChild(b);setTimeout(()=>b.remove(),520)}
+function hit(base,type,text){const B=G.B,e=B.e;let m=G.buff.atkMul;const notes=[];
+ if(e.traits.includes('undead')&&!G.buff.holy){m*=0.3;notes.push('霊体を素通り')}
+ if(e.traits.includes('dark')&&!G.buff.holy){m*=0.5;notes.push('闇の加護に阻まれた')}
+ if(e.traits.includes('scales')){if(type==='rifle'||type==='melee'){m*=0.4;notes.push('鱗に弾かれた')}else if(type==='gren')m*=0.7}
+ const d=Math.max(1,Math.round(base*m*rnd(0.9,1.1)));e.hp=Math.max(0,e.hp-d);
+ log(`${text}　${e.name}に${d}のダメージ${notes.length?'（'+notes.join('・')+'）':''}`,'p');
+ Music.se(type==='rr'||type==='gren'?'boom':'hit');if(type==='rr'||type==='gren')boom(type==='gren');popup('e',d);
+ const mo=$('#mon');if(mo){mo.classList.remove('hurt');void mo.offsetWidth;mo.classList.add('hurt')}}
+function heal(n,text){Music.se('heal');const B=G.B,h=Math.min(n,B.maxHp-B.hp);B.hp+=h;log(`${text}　HPが${h}回復`,'h');popup('u','+'+h,'heal us')}
+function enemyAct(){const B=G.B,e=B.e;B.eTurn++;let d,text;
+ if(e.traits.includes('breath')&&B.eTurn%3===0){d=50*G.m.enemyMul;if(G.equip.mantle){d*=0.5;text='炎の息！ 耐火マントが炎を半分防いだ'}else text='炎の息！'}
+ else if(e.traits.includes('wave')&&B.eTurn%4===0){d=45*G.m.enemyMul;text='暗黒の波動！'}
+ else{d=Math.max(2,e.atk*rnd(0.85,1.15)-B.def);text=`${e.name}の攻撃`}
+ Music.se('hurt');d=Math.round(d);B.hp=Math.max(0,B.hp-d);log(`${text}　小隊に${d}のダメージ`,'e');popup('u','-'+d,'us');
+ const sc=$('#ustat');if(sc){sc.classList.remove('flashred');void sc.offsetWidth;sc.classList.add('flashred')}}
+function aiChoose(){
+ const B=G.B,e=B.e,c=k=>ACTIONS[k].can();
+ if(B.hp<B.maxHp*0.4){if(c('med'))return'med';if(c('band'))return'band'}
+ const big=e.traits.includes('scales')||e.traits.includes('dark')||e.maxHp>=250;
+ if(big&&c('rr'))return'rr';
+ if(c('gren')&&e.hp>40&&e.key!=='slime')return'gren';
+ if(c('rifle')&&!(e.traits.includes('scales')))return'rifle';
+ if(c('rr'))return'rr';
+ if(c('gren'))return'gren';
+ if(c('rifle'))return'rifle';
+ return'melee';
+}
+function autoStep(){if(!G.B||G.B.over||!G.B.auto)return;act(aiChoose())}
+function act(k){const B=G.B;if(B.over||B.busy||!ACTIONS[k].can())return;
+ ACTIONS[k].run();B.turn++;renderBattle();if(checkEnd())return;B.busy=true;renderBattle();
+ setTimeout(()=>{enemyAct();B.busy=false;renderBattle();if(checkEnd())return;if(B.auto)setTimeout(autoStep,SPEED)},SPEED/2)}
+function checkEnd(){const B=G.B;if(B.over)return true;if(B.e.hp<=0){finishBattle(true);return true}if(B.hp<=0){finishBattle(false);return true}if(B.turn>=80){log('長い戦いで弾も気力も尽きた。退却する。','s');finishBattle(false);return true}return false}
+function renderBattleShell(){const st=curStage();
+ $('#s-battle').innerHTML=`${topbar(`<b class="grow">戦闘　${esc(st.dest)}</b><span class="chip" id="turnc"></span><button class="btn dark sm" id="toggleAuto"></button>`)}
+ <div class="field" id="field"><div class="nameplate win"><h2 id="ename"></h2><div class="hpbar"><i id="ehp"></i></div><div class="muted" id="ehpt" style="font-size:13px"></div></div>
+  <div class="monster" id="mon" style="--glow:${GLOW_OF[st.enemy]}">${monsterSVG(st.enemy)}</div></div>
+ <div class="bgrid"><div class="win" id="cmdw"></div><div class="win" id="ustat"></div></div>
+ <div class="win log" id="blog"></div>`;
+ $('#toggleAuto').onclick=()=>{const B=G.B;if(B.over)return;B.auto=!B.auto;renderBattle();if(B.auto&&!B.busy)setTimeout(autoStep,SPEED)}}
+function renderBattle(){const B=G.B,e=B.e;if(!$('#ename'))return;
+ $('#ename').textContent=e.name;$('#ehp').style.width=(e.hp/e.maxHp*100)+'%';$('#ehpt').textContent=`HP ${e.hp} / ${e.maxHp}`;
+ $('#turnc').textContent=`ターン ${B.turn}`;const t=$('#toggleAuto');t.textContent=B.auto?'手動に切り替え':'自動に切り替え';t.style.display=B.over?'none':'';
+ const am=(l,v,u,low)=>`<div class="${low?'low':''}">${l}<br><b>${v}</b> ${u}</div>`;
+ $('#ustat').innerHTML=`<div class="portrait">${leonSVG('55 30 110 110')}</div><h3>${SC.squadName}　レオン</h3><div class="hpbar us"><i style="width:${B.hp/B.maxHp*100}%"></i></div>
+  <div class="muted" style="font-size:13px">HP ${B.hp} / ${B.maxHp}　防御 ${B.def}　攻撃 ${Math.round(G.buff.atkMul*100)}%　加護 ${G.buff.holy?'あり':'なし'}</div>
+  <div class="ammo">${am('小銃弾',inv(RIFLE_AMMO),'発',inv(RIFLE_AMMO)<30)}${am('無反動砲弾',G.equip.rr?inv(RR_AMMO):'—',G.equip.rr?'発':'砲なし',G.equip.rr&&inv(RR_AMMO)<1)}${am('手榴弾',inv(GREN),'個')}${am('救急品',inv(MED),'組')}</div>
+  <div class="muted" style="font-size:12px;margin-top:6px">この戦いで使った量：小銃弾${B.used.rifle}発　砲弾${B.used.rr}発　手榴弾${B.used.gren}個　救急品${B.used.med}組</div>`;
+ $('#cmdw').innerHTML=B.over?`<div class="result"><h2 style="color:${B.win?'var(--good)':'var(--bad)'}">${B.win?'勝利':'敗北'}</h2><button class="btn" id="toDebrief">査閲報告を見る</button></div>`:
+  B.auto?'<h3>命令</h3><p class="muted">小隊が自分で判断して戦っている…</p>':
+  `<h3>命令</h3>${Object.entries(ACTIONS).map(([k,a])=>`<button class="cmd" data-act="${k}" ${(!a.can()||B.busy)?'disabled':''}>${a.label}<small>${a.sub}</small></button>`).join('')}`;
+ $('#cmdw').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(b.dataset.act));
+ const d=$('#toDebrief');if(d)d.onclick=renderDebrief}
+function finishBattle(win){const B=G.B;B.over=true;B.win=win;log(win?`${B.e.name}を討ち取った。`:'小隊は退却を余儀なくされた…','s');recordResult(win);
+ if(win){const mo=$('#mon');if(mo)mo.animate([{opacity:1,filter:'brightness(1)'},{opacity:0,filter:'brightness(3)',transform:'translateY(20px) scale(.9)'}],{duration:900,fill:'forwards'})}
+ renderBattle();if(T.auto)setTimeout(renderDebrief,0)}
+function rankOf(t){return t>=95?'S':t>=85?'A':t>=70?'B':'C'}
+function rankSeal(rk){const u='r'+(++UID);return `<svg viewBox="0 0 120 120" style="width:120px;height:120px"><defs><radialGradient id="g${u}" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#d9503c"/><stop offset=".55" stop-color="#931e1a"/><stop offset="1" stop-color="#4e0909"/></radialGradient></defs>
+ <path d="M60 4 L70 14 L84 10 L88 24 L102 28 L100 42 L112 52 L104 64 L112 76 L100 84 L102 98 L88 100 L84 114 L70 108 L60 118 L50 108 L36 114 L32 100 L18 98 L20 84 L8 76 L16 64 L8 52 L20 42 L18 28 L32 24 L36 10 L50 14Z" fill="url(#g${u})"/>
+ <circle cx="60" cy="61" r="36" fill="none" stroke="#5a0c0c" stroke-width="3" opacity=".7"/><text x="60" y="78" text-anchor="middle" font-family="Shippori Mincho B1,serif" font-weight="800" font-size="50" fill="#fbe2c8">${rk}</text></svg>`}
+
+/* ============ 振り返り ============ */
+const TIPS={
+ reqNo:'依頼番号は、受け取る側が書類と荷物を照合するための番号。1文字でも違うと照合に時間がかかる。',
+ dest:'宛先（受領場所）は毎回変わる。必ず依頼書の宛先を確認する。',
+ missing:'最後に、依頼書の行数と書類の行数が合っているか照合する。',
+ no:'番号は品名だけで判断しない。種類・大きさ・色まで確かめてから写し、品名欄の自動表示で正しい物品かを確認する。',
+ unit:'単位は一覧表（目録・マスタ・区分表）の単位で書く。依頼元の言い方（箱・セット・人分など）のまま書くと数の意味が変わり、差し戻される。',
+ size:'サイズや温度帯の指定がある物品は、その欄に依頼どおりに書く。',
+ qty:'数量は依頼どおりに写す。多すぎても在庫を圧迫し、後が足りなくなる。',
+ extra:'依頼されていない物品は出さない。在庫の無駄づかいになる。',
+ stock:'在庫が足りない物品は、出す前に在庫欄で確認しておく。',
+ rPass:'誤りを見逃して通すと、そのまま次の拠点へ届く。番号・数量・単位・規格・現品数・宛先の順に、一つずつ確かめる。',
+ rFalse:'問題のない行を差し戻すと、その物品が届かなくなる。食い違いの根拠を言えるときだけ差し戻す。',
+ rReason:'差し戻しの理由は具体的に。理由が違うと、出し直す側が別の場所を直してしまう。',
+ rDest:'宛先は依頼書と必ず照合する。正しい宛先を書き換えるのも事故のもと。',
+ fFmt:'請求書も、番号・単位・規格は一覧表どおりに書く。書式の誤りは途中で差し戻される。',
+ fCov:'必要な物を相手の状況から見積もる。足りなくても多すぎても、現場か倉庫のどちらかが困る。',
+ fCheck:'受け取るときは、請求した物と届いた物を一行ずつ見比べる。気づかずにサインすると、後で直せない。',
+};
+function renderDebrief(){
+ const res=G.results[G.stageIdx],C=G.cur,B=G.B,st=curStage(),t=TM();
+ const ck=(ok,x)=>`<span class="ck ${ok?'o':'n'}">${esc(x)}</span>`,stp=ok=>ok?'<span class="stamp ok">可</span>':'<span class="stamp ng">否</span>';
+ const errs=new Set();let table='',head='';
+ if(G.role==='depot'){const ev=C.ev;
+  if(!ev.reqOk)errs.add('reqNo');if(!ev.destOk)errs.add('dest');
+  ev.lines.forEach(x=>{if(!x.r)errs.add('missing');else{if(!x.ok.no)errs.add('no');if(!x.ok.unit)errs.add('unit');if(!x.ok.size)errs.add('size');if(!x.ok.qty)errs.add('qty')}const p=x.r&&ev.proc[x.r.i];if(p&&p.status==='short')errs.add('stock')});if(ev.extras.length)errs.add('extra');
+  head=`<th></th><th>依頼の内容</th><th>あなたの記入</th><th>影響</th>`;
+  table=`<tr><td>${stp(ev.reqOk)}</td><td>依頼番号 ${st.reqNo}</td><td>${ck(ev.reqOk,G.doc.reqNo||'なし')}</td><td>${ev.reqOk?'照合はすぐに済んだ':'受領の照合に手間取った'+(SC.kind==='battle'?'（敵に先制された）':'')}</td></tr>
+   <tr><td>${stp(ev.destOk)}</td><td>宛先 ${esc(st.dest)}</td><td>${ck(ev.destOk,G.doc.dest||'選ばれていない')}</td><td>${ev.destOk?'正しい拠点に届いた':'すべて別の拠点へ運ばれた'}</td></tr>`+
+   ev.lines.map(x=>{const r=x.r,all=r&&Object.values(x.ok).every(Boolean);const filled=r?[ck(x.ok.no,r.no||'番号なし'),ck(x.ok.size,SPEC()+' '+r.size),ck(x.ok.qty,'数量 '+(r.qty??'なし')),ck(x.ok.unit,'単位 '+r.unit)].join(''):'<span class="ck n">書かれていない</span>';
+    const p=r?ev.proc[r.i]:null;return `<tr><td>${stp(all)}</td><td>${esc(x.l.label)} ${esc(x.l.qtyText)}<br><small style="color:#5a4026">正しくは ${x.l.no}／${x.wantSize}／${x.l.qty}${x.it.unit}</small></td><td>${filled}</td><td>${esc(p?p.text:'届かなかった')}</td></tr>`}).join('')+
+   ev.extras.map(r=>`<tr><td>${stp(false)}</td><td>依頼されていない行</td><td>${ck(false,r.no||'番号なし')}</td><td>${esc(ev.proc[r.i].text)}（在庫の無駄）</td></tr>`).join('')}
+ else if(G.role==='relay'){const N=G.npc;
+  if(G.insp.dest!==st.dest)errs.add('rDest');C.judge.forEach(j=>{if(!j.okDecision)errs.add(j.dec==='通過'?'rPass':'rFalse');else if(!j.okReason)errs.add('rReason')});
+  head=`<th></th><th>伝票の行</th><th>本当の状態</th><th>あなたの判断</th><th>影響</th>`;
+  table=`<tr><td>${stp(G.insp.dest===st.dest)}</td><td>宛先 ${esc(N.dest)}</td><td>${N.destErr?`<span class="st-ng">誤り（正しくは${esc(st.dest)}）</span>`:'正しい'}</td><td>${ck(G.insp.dest===st.dest,G.insp.dest)}</td><td>${G.insp.dest===st.dest?'正しい拠点に届いた':'別の拠点へ運ばれた'}</td></tr>`+
+   C.judge.map(j=>`<tr><td>${stp(j.okDecision&&j.okReason)}</td><td>${esc(keyLabel(j.r.no))}　${j.r.qty}${esc(j.r.unit)}（現品${j.r.goods}）</td><td>${j.r.err?`<span class="st-ng">${ERR_TEXT[j.r.err]}</span>`:'問題なし'}</td><td>${ck(j.okDecision&&j.okReason,j.dec)}${j.okReason?'':`<br><small>正しくは「${j.want}」</small>`}</td><td>${esc(j.effect)}</td></tr>`).join('')}
+ else{const R=C.req;
+  if(R.fmtIssues.length)errs.add('fFmt');if(R.covScore<1)errs.add('fCov');if((C.checkScore??1)<1)errs.add('fCheck');
+  head=`<th></th><th>必要な見込み</th><th>あなたの請求</th><th>評価</th>`;
+  table=R.cov.map(c=>{const v=c.sc===1?'ちょうどよい':c.q===0?'請求なし':c.ratio<1?'少なすぎる':'多すぎる';return `<tr><td>${stp(c.sc===1)}</td><td>${esc(keyLabel(lineKey(c.l)))}　${c.l.qty}${c.it.unit}</td><td>${c.q?c.q+c.it.unit:'—'}</td><td>${v}</td></tr>`}).join('')+
+   R.extras.map(r=>`<tr><td>${stp(false)}</td><td>見込みにない物品</td><td>${esc(keyLabel(r.no))}×${r.qty??'?'}</td><td>不要な請求（在庫の無駄）</td></tr>`).join('')+
+   `<tr><td>${stp(!R.fmtIssues.length)}</td><td>請求書の書式</td><td colspan="2">${R.fmtIssues.length?R.fmtIssues.map(esc).join('<br>'):'番号・単位・規格・受領場所はすべて正しい'}</td></tr>`+
+   (C.checkRes||[]).map(x=>`<tr><td>${stp(x.right)}</td><td>受領確認：${esc(keyLabel(x.a.key))}</td><td>${x.a.disc?'<span class="st-ng">食い違いあり</span>':'問題なし'}</td><td>${ck(x.right,x.said?'相違あり':'一致')}</td></tr>`).join('')}
+ const outLine=SC.kind==='battle'?`この戦いで使った量：小銃弾${B.used.rifle}発、砲弾${B.used.rr}発、手榴弾${B.used.gren}個、救急品${B.used.med}組。手元の小銃弾は残り${inv(RIFLE_AMMO)}発。`:`${SC.key==='delivery'?'配達完了率':'販売達成率'}：${Math.round(B.rate*100)}%（目標${Math.round(G.m.pass*100)}%）。`;
+ const last=G.stageIdx===SC.stages.length-1,ch=SC.kind==='battle'?'章':'話';
+ $('#s-debrief').innerHTML=`${topbar(`<b class="grow">${t.report}　${esc(res.enemy)}　${res.win?'<span class="st-ok">成功</span>':'<span class="st-ng">失敗</span>'}</b>`)}
+ <div class="parch report"><h3>${t.report}書 <small>${esc(st.reqNo)}　${esc(st.date)}</small></h3>
+  <div class="scoreline"><div>${G.role==='relay'?'照合の正しさ':G.role==='front'?'請求と受領確認':'書類の正しさ'}<b>${res.accPts} / 80</b>${G.role==='front'?`書式${Math.round(C.req.fOk/C.req.fTot*100)}%・見積${Math.round(C.req.covScore*100)}%・確認${Math.round((C.checkScore??1)*100)}%`:G.role==='relay'?`${C.correct} / ${C.total} 項目`:`${C.ev.correct} / ${C.ev.total} 項目`}</div>
+   <div>時間<b>${res.timePts} / 10</b>${G.m.timer?`${res.elapsed}秒${C.timeUp?'（時間切れ）':''}`:'制限なし'}</div><div>${t.outcome}<b>${res.battlePts} / 10</b>${res.win?'成功':'失敗'}</div>
+   <div class="sealbox">${rankSeal(res.rank)}<div style="font-size:13px">合計 ${res.total}点</div></div></div>
+  <table class="rt"><thead><tr>${head}</tr></thead><tbody>${table}</tbody></table>
+  <p style="font-size:13.5px;margin:12px 0 0;color:#4a3420">${outLine}</p>
+  ${errs.size?`<div class="tips"><b>次に気をつけること</b><ul>${[...errs].map(e=>`<li>${TIPS[e]}</li>`).join('')}</ul></div>`:'<div class="tips"><b>見事な仕事でした。</b>書類と判断に誤りはありません。</div>'}
+  <div class="foot-actions"><button class="btn dark" id="toTitle">タイトルへ</button><span class="grow"></span>${G.mode==='easy'?`<button class="btn dark" id="retry">この${ch}をやり直す</button>`:''}${res.win?`<button class="btn" id="next">${last?'最終報告へ':`次の${ch}へ`}</button>`:(G.mode==='easy'?'':'<button class="btn" id="failEnd">最終報告へ（失敗）</button>')}</div></div>`;
+ $('#toTitle').onclick=toTitle;
+ const rt=$('#retry');if(rt)rt.onclick=()=>{restore();G.totalDocTime-=C.elapsed||0;G.retries++;stageFlow()};
+ const fe=$('#failEnd');if(fe)fe.onclick=()=>renderEnd(true);
+ const nx=$('#next');if(nx)nx.onclick=()=>{if(last)renderEnd();else{G.stageIdx++;stageFlow()}};
+ show('s-debrief','depot');
+ if(T.auto)setTimeout(()=>{if(res.win){if(last)renderEnd();else{G.stageIdx++;stageFlow()}}else if(G.mode==='easy'&&T.retryOnLose&&G.retries<5){restore();G.retries++;stageFlow()}else renderEnd(true)},0);
+}
+function renderEnd(failed){
+ const R=G.results.filter(Boolean),avg=Math.round(R.reduce((a,r)=>a+r.total,0)/Math.max(1,R.length)),rank=rankOf(avg),t=TM(),ch=SC.kind==='battle'?'章':'話';
+ const bk=`${SC.key}/${G.role}/${G.mode}`,best=store.get('ikai_best2',{}),prev=best[bk],isBest=!failed&&(!prev||avg>prev.score||(avg===prev.score&&G.totalDocTime<prev.time));
+ if(isBest){best[bk]={score:avg,rank,time:G.totalDocTime};store.set('ikai_best2',best)}
+ const tt=failed?t.endNg:t.endOk;
+ $('#s-end').innerHTML=`<div class="hero"><h1 class="logo" style="font-size:clamp(40px,7vw,76px)">${tt[0]}</h1><div class="logo-sub">${tt[1]}</div></div>
+ <div class="parch report"><h3>最終報告書 <small>${SC.label}　${esc(roleLabel(G.role))}　${G.m.label}</small></h3>
+  <div class="scoreline"><div>平均点<b>${avg}</b></div><div>書類にかけた時間<b>${Math.floor(G.totalDocTime/60)}分${G.totalDocTime%60}秒</b></div><div>やり直し・書き直し<b>${G.retries+G.rewrites}回</b></div><div class="sealbox">${rankSeal(rank)}${isBest?'<div style="font-size:13px;color:#8f1d1d;font-weight:800">自己ベスト更新</div>':''}</div></div>
+  <table class="rt"><thead><tr><th>${ch}</th><th>内容</th><th>書類</th><th>時間</th><th>${t.outcome}</th><th>合計</th><th>評価</th></tr></thead><tbody>
+   ${R.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.enemy)}</td><td>${r.accPts} / 80</td><td>${r.timePts} / 10</td><td>${r.battlePts} / 10</td><td>${r.total}</td><td>${r.rank}</td></tr>`).join('')}</tbody></table>
+  <p style="margin:12px 0 0">別の立場や研修シナリオでも挑戦してみましょう。同じ書類でも、立場が変わると見える誤りが変わります。</p>
+  <div class="foot-actions"><span class="grow"></span><button class="btn" id="endTitle">タイトルへ</button></div></div>`;
+ $('#endTitle').onclick=toTitle;show('s-end',SC.kind==='battle'?'gate':'depot');if(T.done)T.done(!!failed);
+}
+
+window.__ikai={get G(){return G},T,newGame,stageFlow,setSpeed:v=>SPEED=v,show,setScene,fillCorrect:()=>fillCorrectFn(),renderTitleScreen,useScenario,get SC(){return SC}};
+setScene('gate');renderTitleScreen();Music.renderCtl();$('#aBgm').onclick=()=>Music.set('bgm',!Music.prefs.bgm);$('#aSe').onclick=()=>Music.set('se',!Music.prefs.se);Music.play('title');
+</script>
+</body>
+</html>
